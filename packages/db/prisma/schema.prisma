@@ -1,0 +1,372 @@
+// Makhana Lead Engine — data model
+//
+// Single-business internal tool: there is deliberately NO organization /
+// workspace / tenant table. Everything belongs to the one business whose
+// details live in BusinessProfile.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum LeadSource {
+  google_maps
+  indiamart
+  tradeindia
+  justdial
+  fssai
+  meta_ads
+  referral
+  manual
+}
+
+/// Computed by the API scoring engine. Never set by a client — the API
+/// overwrites whatever is submitted.
+enum LeadScore {
+  high
+  medium
+  low
+}
+
+enum LeadStage {
+  sourced
+  contacted
+  replied
+  sample_sent
+  quoted
+  negotiating
+  closed_won
+  closed_lost
+}
+
+enum InteractionType {
+  call
+  email
+  whatsapp
+  note
+}
+
+enum InteractionDirection {
+  outbound
+  inbound
+  internal
+}
+
+/// Delivery state for outbound interactions. Inbound/internal rows use `na`.
+enum DeliveryStatus {
+  na
+  queued
+  sent
+  delivered
+  bounced
+  failed
+}
+
+enum CampaignChannel {
+  meta_ads
+  scraper_run
+  manual
+}
+
+enum ScraperRunStatus {
+  queued
+  running
+  completed
+  failed
+  /// Run stopped early because it hit the configured request cap.
+  capped
+  /// Run aborted because the target geo-walled us (see scraper README).
+  geo_blocked
+  cancelled
+}
+
+enum UserRole {
+  admin
+  member
+}
+
+enum DocumentType {
+  quotation
+  presentation
+}
+
+// ---------------------------------------------------------------------------
+// Core CRM
+// ---------------------------------------------------------------------------
+
+model Lead {
+  id       String  @id @default(cuid())
+  name     String
+  category String
+  city     String
+  /// 1 = metro, 2 = tier-2, 3 = tier-3. Validated 1..3 at the API boundary.
+  regionTier Int   @default(3)
+  phone    String?
+  email    String?
+  website  String?
+
+  source LeadSource
+  stage  LeadStage  @default(sourced)
+
+  /// Score band, computed server-side by the scoring engine.
+  score LeadScore
+  /// Raw numeric score behind the band. Kept so a band change is explainable
+  /// and so we can re-tune thresholds without re-deriving history blindly.
+  scoreValue Int    @default(0)
+  /// Human-readable breakdown of how scoreValue was reached.
+  scoreReasons String[] @default([])
+
+  dealValue Decimal? @db.Decimal(12, 2)
+  notes     String?
+
+  /// Normalised `name|city` used to prevent duplicate inserts on re-scrape.
+  dedupeKey String @unique
+
+  campaignId   String?
+  campaign     Campaign?   @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  scraperRunId String?
+  scraperRun   ScraperRun? @relation(fields: [scraperRunId], references: [id], onDelete: SetNull)
+
+  interactions Interaction[]
+  documents    Document[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([stage])
+  @@index([source])
+  @@index([score])
+  @@index([city])
+  @@index([regionTier])
+  @@index([createdAt])
+}
+
+model Interaction {
+  id      String          @id @default(cuid())
+  leadId  String
+  lead    Lead            @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type    InteractionType
+  content String
+
+  direction InteractionDirection @default(internal)
+  status    DeliveryStatus       @default(na)
+  /// Subject line for email sends; null for other channels.
+  subject   String?
+  /// Provider-side id (e.g. Resend message id) for reply/bounce correlation.
+  externalId String?
+
+  /// User who logged/triggered it. Null for system-generated rows.
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([leadId, createdAt])
+  @@index([externalId])
+}
+
+model Campaign {
+  id      String          @id @default(cuid())
+  name    String
+  channel CampaignChannel
+
+  /// Channel-specific settings: scraper query params, Meta Ads set id, etc.
+  sourceConfig Json @default("{}")
+
+  /// Spend and returns, for source-performance reporting.
+  spend    Decimal? @db.Decimal(12, 2)
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+
+  leads       Lead[]
+  scraperRuns ScraperRun[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([channel])
+}
+
+/// Audit row for every scrape attempt. Written even when a run fails, so a
+/// silent zero-result scrape is always traceable to a cause.
+model ScraperRun {
+  id       String     @id @default(cuid())
+  source   LeadSource
+  category String
+  city     String
+
+  status      ScraperRunStatus @default(queued)
+  requestedAt DateTime         @default(now())
+  startedAt   DateTime?
+  finishedAt  DateTime?
+
+  /// Result counters. leadsFound = rows parsed off the site;
+  /// leadsCreated + leadsDuplicate should account for all of them.
+  leadsFound     Int @default(0)
+  leadsCreated   Int @default(0)
+  leadsDuplicate Int @default(0)
+  requestsMade   Int @default(0)
+
+  /// Config snapshot (delays, caps, target URL) as actually used by this run.
+  config Json @default("{}")
+
+  error      String?
+  /// Truncated stack / page excerpt to debug parser breakage after a redesign.
+  errorDetail String?
+
+  /// BullMQ job id, so a stuck row can be traced back to the queue.
+  jobId String?
+
+  campaignId String?
+  campaign   Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  leads Lead[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([source, requestedAt])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         UserRole @default(admin)
+
+  sessions     Session[]
+  interactions Interaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Generated documents
+// ---------------------------------------------------------------------------
+
+model Document {
+  id     String       @id @default(cuid())
+  type   DocumentType
+  /// Nullable: a generic capability-deck pptx is not tied to one lead.
+  leadId String?
+  lead   Lead?        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  filename String
+  /// Path relative to STORAGE_DIR — never an absolute host path, so the
+  /// storage volume can move without rewriting rows.
+  storagePath String
+  mimeType    String
+  sizeBytes   Int
+
+  /// Snapshot of the inputs (line items, prices, business profile version)
+  /// so a re-issued quotation can be reproduced exactly.
+  meta Json @default("{}")
+
+  createdAt DateTime @default(now())
+
+  @@index([leadId, createdAt])
+  @@index([type])
+}
+
+// ---------------------------------------------------------------------------
+// Business configuration — single source of truth for generated documents
+// ---------------------------------------------------------------------------
+
+/// Singleton row (id = "default"). Editing this changes every FUTURE
+/// quotation and deck; already-generated files keep their meta snapshot.
+model BusinessProfile {
+  id String @id @default("default")
+
+  legalName  String
+  brandName  String
+  fssaiNumber String
+  gstin      String?
+
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  pincode      String
+  country      String @default("India")
+
+  phone   String
+  email   String
+  website String?
+
+  bankName      String?
+  accountName   String?
+  accountNumber String?
+  ifsc          String?
+
+  /// Terms printed on every quotation, one bullet per entry.
+  quotationTerms String[] @default([])
+  /// Validity window printed on quotations.
+  quotationValidityDays Int @default(15)
+
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  sku         String  @unique
+  name        String
+  /// Makhana grade, e.g. "5 Sut", "6 Sut", "Handpicked Premium".
+  grade       String?
+  description String?
+  hsnCode     String?
+  unit        String  @default("kg")
+  active      Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  priceTiers PriceTier[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, sortOrder])
+}
+
+/// Quantity-banded pricing. maxQty null = open-ended top tier.
+model PriceTier {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  minQty     Int
+  maxQty     Int?
+  pricePerUnit Decimal @db.Decimal(10, 2)
+  currency   String  @default("INR")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, minQty])
+  @@index([productId])
+}

@@ -1,0 +1,202 @@
+# Makhana Lead Engine — local development and single-VM deployment.
+#
+#   cp .env.example .env   # then edit it
+#   docker compose up
+#
+# Target host is one Oracle Cloud "Always Free" ARM VM in an INDIAN region
+# (Hyderabad or Mumbai). The scraper will not work from outside India — see
+# services/scraper/README.md before deploying anywhere else.
+
+name: makhana-lead-engine
+
+x-node-env: &node-env
+  NODE_ENV: ${NODE_ENV:-development}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  # Built from the POSTGRES_* / Redis vars rather than read from DATABASE_URL,
+  # because the value differs by side of the container boundary: host tooling
+  # (the Prisma CLI, a service you run with `pnpm dev`) reaches the database at
+  # localhost, containers reach it at `postgres`. Deriving it here means the
+  # single DATABASE_URL in .env only ever has to be correct for the host.
+  DATABASE_URL: postgresql://${POSTGRES_USER:-lead}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-lead_engine}?schema=public
+  REDIS_URL: redis://redis:6379
+  INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:?INTERNAL_API_TOKEN must be set in .env}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lead}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-lead_engine}
+    ports:
+      # Exposed on localhost only so the database is never reachable from the
+      # public internet even if the VM's firewall is misconfigured.
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-lead} -d ${POSTGRES_DB:-lead_engine}']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # appendonly keeps queued scrape jobs across a restart.
+    command: ['redis-server', '--appendonly', 'yes', '--save', '60', '1']
+    ports:
+      - '127.0.0.1:${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Runs `prisma migrate deploy` once, then exits. Every service that touches
+  # the database waits for this to complete successfully, so no service ever
+  # starts against an un-migrated schema.
+  migrate:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+      target: runner
+    command: ['pnpm', '--filter', '@lead/db', 'migrate']
+    environment:
+      <<: *node-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+      target: runner
+    restart: unless-stopped
+    environment:
+      <<: *node-env
+      API_PORT: ${API_PORT:-4000}
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET must be set in .env}
+      SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-720}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      DOCGEN_URL: ${DOCGEN_URL:-http://docgen:4100}
+      OUTREACH_URL: ${OUTREACH_URL:-http://outreach:4200}
+      STORAGE_DIR: ${STORAGE_DIR:-/data/storage}
+      SCRAPER_SCHEDULE_ENABLED: ${SCRAPER_SCHEDULE_ENABLED:-false}
+      SCRAPER_SCHEDULE_CRON: ${SCRAPER_SCHEDULE_CRON:-0 3 1 * *}
+    ports:
+      - '${API_PORT:-4000}:${API_PORT:-4000}'
+    volumes:
+      - storage:/data/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        ['CMD', 'node', '-e', "fetch('http://127.0.0.1:'+(process.env.API_PORT||4000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:4000}
+    restart: unless-stopped
+    ports:
+      - '${WEB_PORT:-5173}:80'
+    depends_on:
+      api:
+        condition: service_healthy
+
+  docgen:
+    build:
+      context: .
+      dockerfile: services/docgen/Dockerfile
+      target: runner
+    restart: unless-stopped
+    environment:
+      <<: *node-env
+      DOCGEN_PORT: ${DOCGEN_PORT:-4100}
+      STORAGE_DIR: ${STORAGE_DIR:-/data/storage}
+    volumes:
+      - storage:/data/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  outreach:
+    build:
+      context: .
+      dockerfile: services/outreach/Dockerfile
+      target: runner
+    restart: unless-stopped
+    environment:
+      <<: *node-env
+      OUTREACH_PORT: ${OUTREACH_PORT:-4200}
+      OUTREACH_PROVIDER: ${OUTREACH_PROVIDER:-log}
+      OUTREACH_FROM_EMAIL: ${OUTREACH_FROM_EMAIL:-}
+      OUTREACH_FROM_NAME: ${OUTREACH_FROM_NAME:-}
+      OUTREACH_REPLY_TO: ${OUTREACH_REPLY_TO:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      WHATSAPP_ENABLED: ${WHATSAPP_ENABLED:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  # BullMQ worker. Consumes scrape jobs enqueued by the API; it does not
+  # scrape on its own unless SCRAPER_SCHEDULE_ENABLED is true.
+  scraper:
+    build:
+      context: .
+      dockerfile: services/scraper/Dockerfile
+      target: runner
+    restart: unless-stopped
+    environment:
+      <<: *node-env
+      API_URL: ${API_URL:-http://api:4000}
+      SCRAPER_MAX_REQUESTS_PER_RUN: ${SCRAPER_MAX_REQUESTS_PER_RUN:-300}
+      SCRAPER_MIN_DELAY_MS: ${SCRAPER_MIN_DELAY_MS:-3500}
+      SCRAPER_MAX_DELAY_MS: ${SCRAPER_MAX_DELAY_MS:-9000}
+      SCRAPER_BATCH_SIZE: ${SCRAPER_BATCH_SIZE:-40}
+      SCRAPER_BATCH_PAUSE_MS: ${SCRAPER_BATCH_PAUSE_MS:-90000}
+      SCRAPER_HEADLESS: ${SCRAPER_HEADLESS:-true}
+      SCRAPER_NAV_TIMEOUT_MS: ${SCRAPER_NAV_TIMEOUT_MS:-45000}
+      SCRAPER_GEO_CHECK_ENABLED: ${SCRAPER_GEO_CHECK_ENABLED:-true}
+      GOOGLE_PLACES_ENABLED: ${GOOGLE_PLACES_ENABLED:-false}
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+    # Chromium needs more than the default 64MB of shared memory or it will
+    # crash on content-heavy directory pages.
+    shm_size: '1gb'
+    depends_on:
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:
+  storage:

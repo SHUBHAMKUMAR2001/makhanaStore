@@ -1,0 +1,35 @@
+{
+  "name": "makhana-lead-engine",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Lead generation and CRM engine for a makhana wholesale / white-label business",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "build": "pnpm -r --filter=./packages/** build && pnpm -r --filter=./services/** --filter=./apps/** build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm -r test",
+    "db:generate": "pnpm --filter @lead/db generate",
+    "db:migrate": "pnpm --filter @lead/db migrate",
+    "db:push": "pnpm --filter @lead/db push",
+    "db:studio": "pnpm --filter @lead/db studio",
+    "db:seed": "pnpm --filter @lead/db seed",
+    "dev": "docker compose up"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^22.10.2",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.1",
+    "vitest": "^2.1.8"
+  }
+}

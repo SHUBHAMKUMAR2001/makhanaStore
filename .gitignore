@@ -1,0 +1,30 @@
+node_modules/
+dist/
+build/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+.env
+.env.local
+.env.*.local
+!.env.example
+
+.DS_Store
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Generated Prisma client
+packages/db/generated/
+
+# Generated documents (quotations / presentations)
+storage/
+!storage/.gitkeep
+
+# Scraper debug artifacts
+services/scraper/debug/
+
+# Playwright
+test-results/
+playwright-report/
