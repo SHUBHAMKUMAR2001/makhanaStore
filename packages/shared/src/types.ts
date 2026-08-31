@@ -180,3 +180,51 @@ export interface CsvImportResult {
   failed: number;
   errors: { row: number; message: string; field?: string }[];
 }
+
+// --- catalogue -------------------------------------------------------------
+
+export interface PriceTierDto {
+  id: string;
+  minQty: number;
+  maxQty: number | null;
+  pricePerUnit: number;
+  currency: string;
+}
+
+export interface ProductDto {
+  id: string;
+  sku: string;
+  name: string;
+  grade: string | null;
+  description: string | null;
+  hsnCode: string | null;
+  unit: string;
+  active: boolean;
+  sortOrder: number;
+  priceTiers: PriceTierDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BusinessProfileDto {
+  legalName: string;
+  brandName: string;
+  fssaiNumber: string;
+  gstin: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  phone: string;
+  email: string;
+  website: string | null;
+  bankName: string | null;
+  accountName: string | null;
+  accountNumber: string | null;
+  ifsc: string | null;
+  quotationTerms: string[];
+  quotationValidityDays: number;
+  updatedAt: string;
+}

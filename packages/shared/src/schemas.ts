@@ -305,6 +305,19 @@ export const businessProfileUpdateSchema = z.object({
   quotationValidityDays: z.coerce.number().int().min(1).max(365).optional(),
 });
 
+export const priceTierCreateSchema = z
+  .object({
+    minQty: z.coerce.number().int().nonnegative('Minimum quantity cannot be negative'),
+    maxQty: z.coerce.number().int().positive().nullish(),
+    pricePerUnit: z.coerce.number().nonnegative('Price cannot be negative'),
+    currency: trimmed(3).default('INR'),
+  })
+  .refine(
+    (t) => t.maxQty === null || t.maxQty === undefined || t.maxQty >= t.minQty,
+    { message: 'Maximum quantity must be greater than or equal to the minimum', path: ['maxQty'] },
+  );
+export type PriceTierCreateInput = z.infer<typeof priceTierCreateSchema>;
+
 export const productCreateSchema = z.object({
   sku: requiredText(40, 'SKU'),
   name: requiredText(200, 'Product name'),
@@ -314,20 +327,58 @@ export const productCreateSchema = z.object({
   unit: trimmed(20).default('kg'),
   active: z.coerce.boolean().default(true),
   sortOrder: z.coerce.number().int().default(0),
-  priceTiers: z
-    .array(
-      z.object({
-        minQty: z.coerce.number().int().nonnegative(),
-        maxQty: z.coerce.number().int().positive().nullish(),
-        pricePerUnit: z.coerce.number().nonnegative(),
-      }),
-    )
-    .optional(),
+  /**
+   * Optional starting price ladder; tiers can also be managed separately.
+   * Reuses `priceTierCreateSchema` so a tier is validated identically whether
+   * it arrives with a new product or is added to an existing one — otherwise
+   * the same bad tier is a 400 on one route and a 422 on the other.
+   */
+  priceTiers: z.array(priceTierCreateSchema).optional(),
 });
 
 export const productUpdateSchema = productCreateSchema
   .partial()
   .refine((v) => Object.keys(v).length > 0, 'No fields to update');
+
+/**
+ * Deleting a catalogue listing.
+ *
+ * The default is a soft delete (`active = false`): the product stops being
+ * offered on new quotations but the row survives, so a lead's document history
+ * still resolves the SKU it was quoted under. `hard: true` removes the row and
+ * its price tiers outright — allowed because every generated document stores a
+ * full snapshot of its line items in `Document.meta`, so past quotations remain
+ * reproducible even after the product is gone.
+ */
+export const productDeleteQuerySchema = z.object({
+  hard: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+});
+
+export const priceTierUpdateSchema = z
+  .object({
+    minQty: z.coerce.number().int().nonnegative().optional(),
+    maxQty: z.coerce.number().int().positive().nullish(),
+    pricePerUnit: z.coerce.number().nonnegative().optional(),
+    currency: trimmed(3).optional(),
+  })
+  .refine((v) => Object.keys(v).length > 0, 'No fields to update');
+
+/** Replace a product's whole tier ladder in one call. */
+export const priceTierReplaceSchema = z.object({
+  tiers: z.array(priceTierCreateSchema).min(1, 'At least one price tier is required'),
+});
+
+export const productListQuerySchema = z.object({
+  /** Include soft-deleted (inactive) listings. */
+  includeInactive: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+  q: trimmed(120).optional(),
+});
 
 // --- misc ------------------------------------------------------------------
 

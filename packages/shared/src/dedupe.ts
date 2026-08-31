@@ -45,7 +45,14 @@ function normalizeToken(value: string): string {
 }
 
 function stripNoise(value: string): string {
-  const kept = normalizeToken(value)
+  // "M/s" is the common Indian prefix for "Messrs". Normalisation has already
+  // turned the slash into a space by this point, so it arrives as two separate
+  // single-letter tokens and never matches the NOISE_TOKENS entry — strip the
+  // leading pair explicitly rather than adding "m" and "s" to the noise list,
+  // which would also eat meaningful initials elsewhere in a name.
+  const withoutMessrs = normalizeToken(value).replace(/^m s\b\s*/, '');
+
+  const kept = withoutMessrs
     .split(' ')
     .filter((token) => token.length > 0 && !NOISE_TOKENS.has(token));
 
