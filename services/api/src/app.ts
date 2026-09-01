@@ -21,6 +21,7 @@ import { registerCatalogueRoutes } from './routes/catalogue.js';
 import { registerCampaignRoutes } from './routes/campaigns.js';
 import { registerStatsRoutes } from './routes/stats.js';
 import { registerDocumentRoutes } from './routes/documents.js';
+import { registerOutreachRoutes } from './routes/outreach.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   // Cast to FastifyBaseLogger: passing a concrete pino Logger otherwise
@@ -107,6 +108,9 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
   await app.register(async (instance) => {
     registerDocumentRoutes(instance);
+  });
+  await app.register(async (instance) => {
+    registerOutreachRoutes(instance);
   });
 
   return app;
