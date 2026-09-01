@@ -69,15 +69,33 @@ exposed port, a weak admin password, and a leaked secret — all covered below.
 > useful. Oracle's two free Micro instances do not help either — the workload
 > does not split across them.
 
-### Networking
+### Networking — build the VCN first, separately
+
+**Do not let the Create Instance wizard create the VCN and subnet inline.** That
+path is deliberately reduced — the form itself says so — and the
+"Automatically assign public IPv4 address" toggle stays greyed out on it, with a
+warning that blames the subnet even when you have selected *Create new public
+subnet*. No amount of fiddling with the subnet options re-enables it.
+
+Build the network first, then come back:
+
+1. Menu → **Networking → Virtual Cloud Networks**
+2. **Start VCN Wizard** → *Create VCN with Internet Connectivity*
+3. Name it, accept the default CIDRs (VCN `10.0.0.0/16`, public subnet
+   `10.0.0.0/24`), keep the compartment the same as the instance's
+4. Create. You get a VCN, a **public** and a private subnet, an internet
+   gateway, a NAT gateway and the matching route tables — all wired.
+
+Then in Create Instance → Networking:
 
 | Field | Set to | Why |
 | --- | --- | --- |
-| Primary network | **Create new VCN** (or an existing one with an internet gateway) | The wizard-created VCN comes with an internet gateway and route table already wired. |
-| Subnet | **Public subnet** | A private subnet has no route to the internet — no inbound traffic, and Let's Encrypt could not validate your domain. |
-| **Assign a public IPv4 address** | **YES** | ⚠️ The single most important toggle on this page. Without it the VM has no reachable address: no SSH, no site, and no way to fix it afterwards short of attaching one manually. |
-| IPv6 | Off | Nothing here needs it. |
+| Primary network | **Select existing virtual cloud network** → the one you just made | Selecting an existing VCN is what unlocks the public IP toggle. |
+| Subnet | **Select existing subnet** → the one named **Public Subnet-…** | Take the public one. The wizard also created a private subnet, and picking that keeps the toggle disabled for a real reason. |
+| **Automatically assign public IPv4 address** | **ON** | ⚠️ The setting this whole detour exists for. Without it the VM has no reachable address: no SSH, no site, no certificate validation. |
+| IPv6 | Off | Nothing here needs it. Its warning is expected. |
 | Network security groups | Leave unchecked | The subnet's security list is where the 80/443 rules go (step 3). Using both is a common way to end up with rules that silently contradict each other. |
+| Hostname (Advanced) | lowercase, e.g. `makhana-store` | Internal DNS only, but DNS labels are conventionally lowercase. |
 
 > **Consider reserving the public IP.** The auto-assigned address is
 > *ephemeral*: it survives reboots and stops, but is released if you ever
