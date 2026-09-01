@@ -171,21 +171,77 @@ of a couple of gigabytes on its own. If disk does get tight,
 `docker system prune -a` reclaims build layers safely — but never
 `--volumes`, which would take `postgres-data` and `caddy-data` with it.
 
-### If Ampere capacity is unavailable
+### "Out of host capacity for shape VM.Standard.A1.Flex"
 
-"Out of host capacity" on A1 is common. In order of effort:
+Expect this. Ampere free capacity is heavily contested and the error says
+nothing about your configuration — the same request succeeds later unchanged.
 
-1. Retry — capacity is released continuously; different times of day differ.
-2. Try a different **availability domain** in the same region.
-3. Try the other Indian region (Hyderabad ↔ Mumbai). ⚠️ Only if your *home*
-   region allows creating there; the home region choice from step 1 stands.
-4. Pay for a small AMD instance. A `VM.Standard.E3.Flex` at 2 OCPU / 8 GB is
-   roughly ₹1,500–2,500/month and runs this comfortably. That breaks the
-   zero-cost goal, so treat it as a fallback rather than the plan.
+Two pieces of the console's own advice do not apply here:
 
-**Minimum that actually works:** 2 OCPU / 8 GB. Below ~4 GB the scraper's
-Chromium is the first thing to fail, and it fails as a container restart loop
-rather than a clear error.
+- **"Try a different availability domain."** Hyderabad and Mumbai are
+  single-AD regions. There is no AD-2.
+- **"Try another region."** Always Free resources exist only in your home
+  region, so creating elsewhere is a paid instance.
+
+What actually works, in order:
+
+**1. Ask for less.** Capacity is allocated per core, so a smaller shape often
+succeeds immediately where 4 OCPU / 24 GB fails. Edit the shape and retry at:
+
+| Shape | Runs this app? |
+| --- | --- |
+| 2 OCPU / 12 GB | Comfortably. Best trade-off. |
+| 1 OCPU / 6 GB | Yes — 6 GB is ample for the stack, including Chromium. The single core mainly makes the first container build slow (closer to 40 minutes than 15). |
+
+You can raise OCPU and memory later from the instance page, though that resize
+competes for capacity again. Getting *something* running beats waiting for the
+maximum.
+
+**2. Retry on a loop.** Capacity frees continuously and off-peak hours are
+easier. Rather than clicking Create by hand for an afternoon, use Cloud Shell —
+the OCI CLI there is already authenticated:
+
+```bash
+# Collect these once from the console:
+#   compartment OCID  — Identity → Compartments
+#   subnet OCID       — Networking → your VCN → public-subnet
+#   image OCID        — the Ubuntu 22.04 Minimal aarch64 build for your region
+COMPARTMENT=ocid1.tenancy.oc1..xxxx
+SUBNET=ocid1.subnet.oc1.xxxx
+IMAGE=ocid1.image.oc1.xxxx
+AD=$(oci iam availability-domain list --query 'data[0].name' --raw-output)
+
+until oci compute instance launch \
+    --availability-domain "$AD" \
+    --compartment-id "$COMPARTMENT" \
+    --shape VM.Standard.A1.Flex \
+    --shape-config '{"ocpus":4,"memoryInGBs":24}' \
+    --image-id "$IMAGE" \
+    --subnet-id "$SUBNET" \
+    --assign-public-ip true \
+    --boot-volume-size-in-gbs 100 \
+    --ssh-authorized-keys-file ~/.ssh/id_rsa.pub \
+    --wait-for-state RUNNING 2>/dev/null; do
+  echo "$(date +%H:%M) — no capacity, retrying in 60s"
+  sleep 60
+done
+echo "Instance created."
+```
+
+Leave it running. It typically catches capacity within a few hours.
+
+**3. Upgrade to Pay As You Go.** Counter-intuitively this is the most reliable
+fix: PAYG accounts are not queued behind free-tier requests for Ampere capacity,
+and **your Always Free allowances still apply** — a 4 OCPU / 24 GB A1 instance
+remains ₹0. You do take on the risk of accidentally provisioning something
+billable, so set a budget alert if you go this route.
+
+**4. Pay for an AMD shape.** `VM.Standard.E3.Flex` at 2 OCPU / 8 GB runs this
+comfortably for roughly ₹1,500–2,500/month. It breaks the zero-cost constraint
+the project is scoped around, so it is a genuine last resort.
+
+**Memory floor:** about 4 GB. Below that the scraper's Chromium is the first
+casualty, and it fails as a container restart loop rather than a legible error.
 
 ### Firewall
 
