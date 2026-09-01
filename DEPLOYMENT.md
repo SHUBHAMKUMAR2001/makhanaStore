@@ -209,7 +209,7 @@ The review screen is the last point where a mistake is cheap. Read these off it:
 
 | Field | Must say |
 | --- | --- |
-| Image | `Canonical Ubuntu 22.04 Minimal aarch64` |
+| Image | `Canonical Ubuntu 22.04 Minimal aarch64` — **re-check this every time**. Restarting the create flow silently resets it to the Oracle Linux default, and it is easy to miss after fixing something else. |
 | Shape build | `4 core OCPU, 24 GB memory` |
 | **Public IPv4 address** | **Yes** ← the one that cannot be fixed afterwards |
 | Use network security groups | No |
@@ -249,6 +249,15 @@ you will be rate-limited by Let's Encrypt for an hour:
 ```bash
 dig +short leads.yourdomain.com     # must print your VM's IP
 ```
+
+> **Why Ubuntu rather than Oracle Linux 9.** Every command in this runbook is
+> written for Ubuntu, but the deeper reason is SELinux. Oracle Linux enforces it
+> by default, and it blocks a container from reading a bind-mounted host file
+> unless the mount carries a `:z` or `:Z` label — which `docker-compose.yml`
+> does not use. The Caddyfile mount would fail with a permission error that does
+> not mention SELinux anywhere. Oracle Linux also ships podman rather than
+> docker, uses `dnf` and `firewalld`, and logs you in as `opc` instead of
+> `ubuntu`. All surmountable, none of it useful here.
 
 ## 4. Install Docker
 
