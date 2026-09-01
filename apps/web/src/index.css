@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-parchment-100 text-ink font-sans antialiased;
+    /* A faint ruled ground, like ledger paper. */
+    background-image: linear-gradient(rgba(27, 32, 25, 0.025) 1px, transparent 1px);
+    background-size: 100% 2rem;
+  }
+
+  /* Numbers line up in columns — the whole point of a ledger. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    @apply font-mono;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-sm border border-parchment-300 bg-parchment-50 shadow-ledger;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-sm border px-3 py-1.5
+           text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn border-moss-700 bg-moss-700 text-parchment-50 hover:bg-moss-800;
+  }
+  .btn-secondary {
+    @apply btn border-parchment-300 bg-parchment-50 text-ink-soft hover:bg-parchment-200;
+  }
+  .btn-danger {
+    @apply btn border-rust-500 bg-parchment-50 text-rust-700 hover:bg-rust-100;
+  }
+
+  .field {
+    @apply w-full rounded-sm border border-parchment-300 bg-parchment-50 px-2.5 py-1.5 text-sm
+           text-ink placeholder:text-ink-faint/60
+           focus:border-moss-500 focus:outline-none focus:ring-1 focus:ring-moss-500;
+  }
+
+  .label {
+    @apply mb-1 block text-xs font-medium uppercase tracking-wider text-ink-faint;
+  }
+
+  /* Ruled table rows. */
+  .ledger-row {
+    @apply border-b border-parchment-200 last:border-b-0;
+  }
+}
