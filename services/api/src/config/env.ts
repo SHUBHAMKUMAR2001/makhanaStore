@@ -43,8 +43,20 @@ const envSchema = z.object({
       'INTERNAL_API_TOKEN must be at least 32 characters — generate one with `openssl rand -hex 32`',
     ),
 
+  /**
+   * The origin users actually reach the app on — e.g. https://leads.example.com
+   * in production, or http://203.0.113.10 for an IP-only deployment.
+   *
+   * This drives the session cookie's Secure flag. Tying it to the real origin
+   * rather than to NODE_ENV avoids the failure that flag otherwise causes: with
+   * `secure: true` on a plain-HTTP deployment the browser silently discards the
+   * cookie, so login appears to succeed and every subsequent request 401s,
+   * which reads as "auth is broken" rather than "you need TLS".
+   */
+  PUBLIC_URL: z.string().url().default('http://localhost:5173'),
+
   /** Comma-separated. Credentialed CORS forbids `*`, so this must be explicit. */
-  CORS_ORIGINS: z.string().default('http://localhost:5173'),
+  CORS_ORIGINS: z.string().default(''),
 
   DOCGEN_URL: z.string().default('http://localhost:4100'),
   OUTREACH_URL: z.string().default('http://localhost:4200'),
@@ -61,6 +73,8 @@ export type Env = Omit<z.infer<typeof envSchema>, 'CORS_ORIGINS'> & {
   CORS_ORIGINS: string[];
   IS_PRODUCTION: boolean;
   IS_TEST: boolean;
+  /** True when PUBLIC_URL is https — see the note on PUBLIC_URL above. */
+  COOKIE_SECURE: boolean;
 };
 
 function load(): Env {
@@ -74,13 +88,20 @@ function load(): Env {
   }
 
   const value = parsed.data;
+
+  // Default CORS to the public origin. Behind the bundled reverse proxy the
+  // browser only ever sees one origin, so this list is usually empty in
+  // practice — but a same-origin entry is the safe default, not '*'.
+  const origins = value.CORS_ORIGINS.split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
   return {
     ...value,
-    CORS_ORIGINS: value.CORS_ORIGINS.split(',')
-      .map((o) => o.trim())
-      .filter(Boolean),
+    CORS_ORIGINS: origins.length > 0 ? origins : [value.PUBLIC_URL.replace(/\/$/, '')],
     IS_PRODUCTION: value.NODE_ENV === 'production',
     IS_TEST: value.NODE_ENV === 'test',
+    COOKIE_SECURE: value.PUBLIC_URL.startsWith('https://'),
   };
 }
 

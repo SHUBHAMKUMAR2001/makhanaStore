@@ -27,6 +27,12 @@ month.
 | `services/outreach` | `@lead/outreach` | Email/WhatsApp sending behind a provider interface. |
 | `apps/web` | `@lead/web` | The CRM dashboard. |
 
+## Deploying to production
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for the full runbook — Oracle Cloud VM,
+automatic HTTPS via Caddy, backups, and the region requirement that cannot be
+changed after signup.
+
 ## Quick start
 
 ```bash

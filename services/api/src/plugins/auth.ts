@@ -78,7 +78,10 @@ export function setSessionCookie(reply: FastifyReply, sessionId: string, expires
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
-    secure: env.IS_PRODUCTION,
+    // Driven by PUBLIC_URL's scheme, not NODE_ENV: a Secure cookie on a
+    // plain-HTTP deployment is silently dropped by the browser, which presents
+    // as "login works but nothing else does".
+    secure: env.COOKIE_SECURE,
     signed: true,
     expires: expiresAt,
   });

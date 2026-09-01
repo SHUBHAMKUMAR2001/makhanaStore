@@ -109,6 +109,61 @@ jobs:
       - name: Run tests
         run: pnpm -r test
 
+  e2e:
+    name: E2E smoke tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lead
+          POSTGRES_PASSWORD: lead
+          POSTGRES_DB: lead_engine_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      ADMIN_EMAIL: e2e@example.com
+      ADMIN_PASSWORD: e2e-password-at-least-12-chars
+      PUBLIC_URL: http://127.0.0.1:4010
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+
+      - name: Apply migrations
+        run: pnpm --filter @lead/db migrate
+
+      - name: Build shared packages
+        run: pnpm --filter @lead/shared build && pnpm --filter @lead/db build
+
+      # No browser is needed: these drive the API over HTTP via Playwright's
+      # request fixture, so there is nothing to download.
+      - name: Run smoke tests
+        run: pnpm --filter @lead/e2e test
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7
+
   build:
     name: Build
     runs-on: ubuntu-latest

@@ -1,0 +1,44 @@
+# Caddy sits in front of everything. It is the only container with published
+# ports, which is what lets the API stop listening on a public interface.
+#
+# CADDY_SITE_ADDRESS decides the mode:
+#
+#   leads.example.com   -> Caddy obtains and renews a Let's Encrypt certificate
+#                          automatically. This is the mode you want: session
+#                          cookies are Secure, so HTTPS is required for login
+#                          to work at all.
+#
+#   :80                 -> plain HTTP, for an IP-only deployment with no domain.
+#                          Set PUBLIC_URL to the matching http:// origin so the
+#                          Secure flag comes off the cookie to match.
+
+{$CADDY_SITE_ADDRESS} {
+	encode zstd gzip
+
+	# The web container's nginx already proxies /api to the API service, so
+	# everything can go to a single upstream and the browser sees one origin.
+	# That keeps the session cookie first-party.
+	reverse_proxy web:80
+
+	# Generated documents can take a few seconds to build.
+	request_body {
+		max_size 20MB
+	}
+
+	header {
+		# Basic hardening. HSTS is only emitted when actually serving HTTPS —
+		# sending it over plain HTTP would pin browsers to a scheme this
+		# deployment may not support.
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 10MB
+			roll_keep 5
+		}
+	}
+}
