@@ -49,6 +49,18 @@ Free and costs nothing.
   is equally fine if you prefer having the usual diagnostic tools to hand.
 - Save the SSH private key it offers. There is no second chance.
 
+### The "Security" section of the create form
+
+Leave **both toggles off**:
+
+| Toggle | Set to | Why |
+| --- | --- | --- |
+| Shielded instance | **Off** | Secure Boot / Measured Boot / vTPM. Guards against a tampered boot chain — a threat model that does not apply to a single VM you control, and it constrains what kernel modules can load for no benefit here. May be unavailable on Ampere shapes; greyed out is fine. |
+| Confidential computing | **Off** | AMD SEV memory encryption. Not applicable to Ampere at all, and it costs performance where it is available. |
+
+Neither addresses what actually threatens this deployment. The real risks are an
+exposed port, a weak admin password, and a leaked secret — all covered below.
+
 > **Do not take `VM.Standard.E2.1.Micro`**, even though it is also labelled
 > Always Free. It has **1 GB of RAM**. This stack runs Postgres, Redis, four
 > Node services, nginx and Caddy, and the scraper launches Chromium, which alone
@@ -214,7 +226,63 @@ create an Object Storage bucket (20 GB free), configure the `oci` CLI, and set
 
 To restore: `./deploy/restore.sh /var/backups/lead-engine/db-YYYYMMDD-HHMMSS.sql.gz`
 
-## 9. Replace the placeholder business data
+## 9. Security checklist
+
+What the application already does, so you know what is and is not your job:
+
+| | |
+| --- | --- |
+| Public ports | **Only 80 and 443**, both on Caddy. The API, docgen, outreach and scraper publish nothing; Postgres and Redis bind to `127.0.0.1`. |
+| Transport | TLS terminated by Caddy with certificates renewed automatically. |
+| Passwords | Argon2id hashed. Never stored or logged in the clear. |
+| Sessions | Opaque id in an httpOnly, signed, SameSite=Lax cookie, `Secure` when `PUBLIC_URL` is https. Server-side, so revocable instantly. |
+| Login | Rate limited to 10 attempts per 5 minutes. Wrong email and wrong password take the same time, so the response does not reveal which addresses are registered. |
+| API | Rate limited globally; every route group behind an auth guard; every input validated with zod at the boundary. |
+| Service-to-service | `x-internal-token`, compared in constant time. |
+| Logs | Cookies, tokens and API keys are redacted by pino. |
+
+What is yours:
+
+**Secrets.** Generate them, never reuse them, never commit them. `.env` is
+gitignored and excluded from every Docker build context — keep it that way. If
+one leaks, rotate it and restart: changing `SESSION_SECRET` invalidates every
+session, which is the point.
+
+**SSH.** Key-only by default on Oracle images. Confirm password auth is off:
+
+```bash
+sudo grep -E '^(PasswordAuthentication|PermitRootLogin)' /etc/ssh/sshd_config
+# want: PasswordAuthentication no   /   PermitRootLogin no
+```
+
+Consider restricting port 22 in the OCI security list to your own IP rather than
+`0.0.0.0/0`. If your address is dynamic, `fail2ban` is the pragmatic
+alternative:
+
+```bash
+sudo apt install -y fail2ban && sudo systemctl enable --now fail2ban
+```
+
+**Updates.** The VM will not patch itself:
+
+```bash
+sudo apt install -y unattended-upgrades
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+```
+
+Rebuild the app images periodically too — `docker compose build --pull` picks up
+base-image security fixes.
+
+**Admin password.** One account guards every lead you own. Make it long, store
+it in a password manager, and change it from the seeded value after first login
+(**`POST /auth/change-password`**, which invalidates all sessions).
+
+**What is deliberately not here:** no 2FA, no audit log of who viewed what, no
+per-user permissions. This is a single-operator internal tool and those were
+scoped out. If someone else joins, revisit that decision before handing them a
+login.
+
+## 10. Replace the placeholder business data
 
 **Before any quotation reaches a real buyer.** Out of the box it says
 `Your Legal Entity Name Pvt Ltd`, FSSAI `00000000000000`, with invented rates.
