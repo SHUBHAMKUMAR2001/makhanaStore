@@ -30,13 +30,42 @@ At signup, choose a home region of **India South (Hyderabad)** or
 
 ## 2. Create the VM
 
-- Shape **VM.Standard.A1.Flex** — ARM, Always Free up to 4 OCPU / 24 GB. Take
-  all four OCPUs and 24 GB; it costs nothing.
-- Image **Ubuntu 22.04 (aarch64)**.
+### Finding the right shape — the shape list has a series selector
+
+Create Instance → **Image and shape** → **Change shape**. The dialog opens on
+the **AMD** series, which shows `VM.Standard.E2.1.Micro`, `E3.Flex`, `E2.x` and
+the Intel `Standard2.x` shapes. **A1.Flex is not in that list.**
+
+Click the **Ampere** button in the *Shape series* row, then pick
+**VM.Standard.A1.Flex** and set it to **4 OCPU / 24 GB** — all of it is Always
+Free and costs nothing.
+
+- Image **Ubuntu 22.04 (aarch64)** — must be the ARM build to match the shape.
 - Save the SSH private key it offers. There is no second chance.
 
-If you get "Out of host capacity", try the other Indian region, or retry over a
-few hours — A1 capacity comes and goes.
+> **Do not take `VM.Standard.E2.1.Micro`**, even though it is also labelled
+> Always Free. It has **1 GB of RAM**. This stack runs Postgres, Redis, four
+> Node services, nginx and Caddy, and the scraper launches Chromium, which alone
+> wants around 1 GB while a scrape is running. The idle stack needs roughly
+> 750 MB before Chromium starts, so a 1 GB box is out of memory before it is
+> useful. Oracle's two free Micro instances do not help either — the workload
+> does not split across them.
+
+### If Ampere capacity is unavailable
+
+"Out of host capacity" on A1 is common. In order of effort:
+
+1. Retry — capacity is released continuously; different times of day differ.
+2. Try a different **availability domain** in the same region.
+3. Try the other Indian region (Hyderabad ↔ Mumbai). ⚠️ Only if your *home*
+   region allows creating there; the home region choice from step 1 stands.
+4. Pay for a small AMD instance. A `VM.Standard.E3.Flex` at 2 OCPU / 8 GB is
+   roughly ₹1,500–2,500/month and runs this comfortably. That breaks the
+   zero-cost goal, so treat it as a fallback rather than the plan.
+
+**Minimum that actually works:** 2 OCPU / 8 GB. Below ~4 GB the scraper's
+Chromium is the first thing to fail, and it fails as a container restart loop
+rather than a clear error.
 
 ### Firewall
 
