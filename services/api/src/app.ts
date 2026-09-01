@@ -20,6 +20,7 @@ import { registerLeadRoutes } from './routes/leads.js';
 import { registerCatalogueRoutes } from './routes/catalogue.js';
 import { registerCampaignRoutes } from './routes/campaigns.js';
 import { registerStatsRoutes } from './routes/stats.js';
+import { registerDocumentRoutes } from './routes/documents.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   // Cast to FastifyBaseLogger: passing a concrete pino Logger otherwise
@@ -103,6 +104,9 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
   await app.register(async (instance) => {
     registerStatsRoutes(instance);
+  });
+  await app.register(async (instance) => {
+    registerDocumentRoutes(instance);
   });
 
   return app;
