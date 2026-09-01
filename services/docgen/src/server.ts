@@ -9,12 +9,7 @@
 import Fastify, { type FastifyBaseLogger } from 'fastify';
 import { pino } from 'pino';
 import { z } from 'zod';
-import {
-  assertDatabaseReachable,
-  disconnectPrisma,
-  prisma,
-  type Prisma,
-} from '@lead/db';
+import { assertDatabaseReachable, disconnectPrisma, prisma, type Prisma } from '@lead/db';
 import { presentationRequestSchema, quotationRequestSchema } from '@lead/shared';
 import { env } from './config.js';
 import { buildQuotationContext, QuotationDataError } from './lib/quotation-data.js';
@@ -29,7 +24,9 @@ const logger = pino({
   level: env.NODE_ENV === 'test' ? 'silent' : env.LOG_LEVEL,
   ...(env.NODE_ENV === 'production'
     ? {}
-    : { transport: { target: 'pino-pretty', options: { colorize: true, ignore: 'pid,hostname' } } }),
+    : {
+        transport: { target: 'pino-pretty', options: { colorize: true, ignore: 'pid,hostname' } },
+      }),
 });
 
 export async function buildDocgenApp() {
@@ -42,7 +39,9 @@ export async function buildDocgenApp() {
   app.addHook('onRequest', async (request, reply) => {
     if (request.url === '/health') return;
     if (request.headers['x-internal-token'] !== env.INTERNAL_API_TOKEN) {
-      await reply.status(401).send({ error: { code: 'unauthorized', message: 'Internal token required' } });
+      await reply
+        .status(401)
+        .send({ error: { code: 'unauthorized', message: 'Internal token required' } });
     }
   });
 
@@ -233,7 +232,9 @@ export async function buildDocgenApp() {
 
     const document = await prisma.document.findUnique({ where: { id } });
     if (!document) {
-      return reply.status(404).send({ error: { code: 'not_found', message: 'Document not found' } });
+      return reply
+        .status(404)
+        .send({ error: { code: 'not_found', message: 'Document not found' } });
     }
 
     try {
@@ -267,7 +268,10 @@ async function main(): Promise<void> {
 
   const shutdown = (signal: string): void => {
     logger.info({ signal }, 'Shutting down');
-    void app.close().then(disconnectPrisma).then(() => process.exit(0));
+    void app
+      .close()
+      .then(disconnectPrisma)
+      .then(() => process.exit(0));
   };
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));

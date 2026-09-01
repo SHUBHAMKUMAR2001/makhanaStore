@@ -116,9 +116,7 @@ export function registerCatalogueRoutes(app: FastifyInstance): void {
   app.get('/config/business', async () => {
     const profile = await prisma.businessProfile.findUnique({ where: { id: 'default' } });
     if (!profile) {
-      throw ApiError.notFound(
-        'Business profile (run `pnpm db:seed` to create it)',
-      );
+      throw ApiError.notFound('Business profile (run `pnpm db:seed` to create it)');
     }
     return serializeBusinessProfile(profile);
   });

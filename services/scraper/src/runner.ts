@@ -62,10 +62,7 @@ export async function executeRun(params: RunParams): Promise<RunOutcome> {
     startedAt: new Date().toISOString(),
   });
 
-  log.info(
-    { category: params.category, city: params.city, maxRequests },
-    'Scrape run starting',
-  );
+  log.info({ category: params.category, city: params.city, maxRequests }, 'Scrape run starting');
 
   let browser: Browser | null = null;
 
@@ -113,7 +110,12 @@ export async function executeRun(params: RunParams): Promise<RunOutcome> {
       if (params.source === 'indiamart') {
         result = await scrapeIndiamart(page, scrapeParams, throttle);
       } else if (params.source === 'justdial' || params.source === 'tradeindia') {
-        result = await scrapeSelectorSite(page, SITE_SELECTORS[params.source], scrapeParams, throttle);
+        result = await scrapeSelectorSite(
+          page,
+          SITE_SELECTORS[params.source],
+          scrapeParams,
+          throttle,
+        );
       } else {
         throw new Error(`Source "${params.source}" is not scrapable`);
       }
@@ -162,10 +164,7 @@ export async function executeRun(params: RunParams): Promise<RunOutcome> {
     // Geo-blocking is the failure most likely to be misdiagnosed as "the
     // scraper found nothing", so it is logged at error level with the remedy.
     if (isGeo) {
-      log.error(
-        { evidence: (error as GeoBlockedError).evidence },
-        `GEO-BLOCKED: ${message}`,
-      );
+      log.error({ evidence: (error as GeoBlockedError).evidence }, `GEO-BLOCKED: ${message}`);
     } else {
       log.error({ err: error }, 'Scrape run failed');
     }

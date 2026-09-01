@@ -17,9 +17,8 @@ let pluginRegistered = false;
 
 function registerPlugins(): void {
   if (pluginRegistered) return;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- puppeteer-extra
-  // and the stealth plugin ship independently-versioned type declarations that
-  // do not structurally match; the runtime contract is stable.
+  // puppeteer-extra and the stealth plugin ship independently-versioned type
+  // declarations that do not structurally match; the runtime contract is stable.
   puppeteerExtra.use(StealthPlugin() as Parameters<typeof puppeteerExtra.use>[0]);
   pluginRegistered = true;
 }
@@ -66,7 +65,9 @@ export async function newPage(browser: Browser): Promise<Page> {
       return;
     }
     const url = request.url();
-    if (/googletagmanager|google-analytics|doubleclick|facebook\.net|hotjar|clarity\.ms/.test(url)) {
+    if (
+      /googletagmanager|google-analytics|doubleclick|facebook\.net|hotjar|clarity\.ms/.test(url)
+    ) {
       void request.abort();
       return;
     }

@@ -76,7 +76,6 @@ export interface CategoryRule {
   examples: string[];
 }
 
-
 export const CATEGORY_RULES: CategoryRule[] = [
   // ORDER IS SPECIFICITY, NOT VALUE. Rules are evaluated top to bottom and the
   // first match wins, so a rule must sit above any broader rule that would
@@ -322,13 +321,7 @@ export const CATEGORY_RULES: CategoryRule[] = [
       /\bstore\b/,
       /\boutlet\b/,
     ],
-    examples: [
-      'Kirana Store',
-      'Grocery Shop',
-      'General Store',
-      'Provision Store',
-      'Retail Outlet',
-    ],
+    examples: ['Kirana Store', 'Grocery Shop', 'General Store', 'Provision Store', 'Retail Outlet'],
   },
 ];
 

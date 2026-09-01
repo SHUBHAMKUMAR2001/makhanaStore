@@ -6,7 +6,15 @@
  * predictability: the cost of the dashboard stays flat as the leads table grows.
  */
 
-import { LEAD_SOURCES, LEAD_STAGES, OPEN_STAGES, type DashboardStats, type LeadScore, type LeadSource, type LeadStage } from '@lead/shared';
+import {
+  LEAD_SOURCES,
+  LEAD_STAGES,
+  OPEN_STAGES,
+  type DashboardStats,
+  type LeadScore,
+  type LeadSource,
+  type LeadStage,
+} from '@lead/shared';
 import { prisma, decimalToNumberOrZero } from '@lead/db';
 import { serializeScraperRun } from '../lib/serialize.js';
 
@@ -62,7 +70,15 @@ export async function getDashboardStats(options: { days?: number } = {}): Promis
   // --- per source ----------------------------------------------------------
   const sourceRows = new Map<
     LeadSource,
-    { leads: number; contacted: number; replied: number; won: number; lost: number; revenue: number; pipelineValue: number }
+    {
+      leads: number;
+      contacted: number;
+      replied: number;
+      won: number;
+      lost: number;
+      revenue: number;
+      pipelineValue: number;
+    }
   >();
   for (const source of LEAD_SOURCES) {
     sourceRows.set(source, {
@@ -77,9 +93,7 @@ export async function getDashboardStats(options: { days?: number } = {}): Promis
   }
 
   /** Stages at or past "contacted" — a lead that reached them was worked. */
-  const contactedOrBeyond = new Set<LeadStage>(
-    LEAD_STAGES.slice(LEAD_STAGES.indexOf('contacted')),
-  );
+  const contactedOrBeyond = new Set<LeadStage>(LEAD_STAGES.slice(LEAD_STAGES.indexOf('contacted')));
   const repliedOrBeyond = new Set<LeadStage>(LEAD_STAGES.slice(LEAD_STAGES.indexOf('replied')));
 
   for (const row of bySourceStage) {

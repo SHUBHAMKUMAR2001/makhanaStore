@@ -132,9 +132,21 @@ change a password.
   Mocking Prisma would skip exactly the things most likely to break: the unique
   index behind de-duplication, enum constraints, and Decimal handling.
 
-> **The integration suite `TRUNCATE`s every table.** `resetDatabase()` refuses to
-> run unless `NODE_ENV=test`, and the vitest config sets that itself — but point
-> `DATABASE_URL` at a throwaway database anyway.
+> **The integration suite `TRUNCATE`s every table**, so it runs against a
+> separate database. The vitest config derives a `<name>_test` sibling of
+> `DATABASE_URL` (override with `TEST_DATABASE_URL`), and `resetDatabase()`
+> refuses outright unless the database name contains "test".
+>
+> Create it once:
+> ```bash
+> createdb -O lead lead_engine_test
+> DATABASE_URL=postgresql://lead:...@localhost:5432/lead_engine_test pnpm db:migrate
+> ```
+>
+> An earlier version of this guard only checked `NODE_ENV`, which vitest sets
+> itself — so it protected against nothing, and the suite twice wiped the
+> development database. The database *name* is what the developer actually
+> controls, so that is what gets checked.
 
 ## Scripts
 

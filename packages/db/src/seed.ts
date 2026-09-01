@@ -103,7 +103,8 @@ const PRODUCTS = [
     sku: 'MK-ROAST-PLAIN',
     name: 'Roasted Makhana — Lightly Salted',
     grade: '5 Sut base',
-    description: 'Roasted in-house, lightly salted. Ready-to-eat, packed in nitrogen-flushed pouches.',
+    description:
+      'Roasted in-house, lightly salted. Ready-to-eat, packed in nitrogen-flushed pouches.',
     hsnCode: '20081920',
     sortOrder: 40,
     tiers: [

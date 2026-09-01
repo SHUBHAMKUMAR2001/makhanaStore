@@ -23,7 +23,6 @@ const MOSS_LIGHT = 'A3B594';
 const PARCHMENT = 'F5F2E9';
 const INK = '1B2019';
 const FAINT = '6B7266';
-const RUST = 'A65D3A';
 
 export interface PresentationOptions {
   business: BusinessProfile;
@@ -68,33 +67,71 @@ export async function generatePresentationPptx(
   const title = slide();
   title.background = { color: MOSS_DARK };
   title.addText(b.brandName, {
-    x: 0.7, y: 1.6, w: 8.6, h: 0.9,
-    fontSize: 40, bold: true, color: PARCHMENT,
+    x: 0.7,
+    y: 1.6,
+    w: 8.6,
+    h: 0.9,
+    fontSize: 40,
+    bold: true,
+    color: PARCHMENT,
   });
   title.addText(options.title ?? 'Makhana — wholesale & white-label manufacturing', {
-    x: 0.7, y: 2.5, w: 8.6, h: 0.5,
-    fontSize: 18, color: MOSS_LIGHT,
+    x: 0.7,
+    y: 2.5,
+    w: 8.6,
+    h: 0.5,
+    fontSize: 18,
+    color: MOSS_LIGHT,
   });
   if (options.leadName) {
     title.addText(`Prepared for ${options.leadName}`, {
-      x: 0.7, y: 3.2, w: 8.6, h: 0.4,
-      fontSize: 13, color: MOSS_LIGHT, italic: true,
+      x: 0.7,
+      y: 3.2,
+      w: 8.6,
+      h: 0.4,
+      fontSize: 13,
+      color: MOSS_LIGHT,
+      italic: true,
     });
   }
-  title.addText(
-    `${b.city}, ${b.state}  ·  ${b.phone}  ·  ${b.email}`,
-    { x: 0.7, y: 4.3, w: 8.6, h: 0.4, fontSize: 11, color: MOSS_LIGHT },
-  );
+  title.addText(`${b.city}, ${b.state}  ·  ${b.phone}  ·  ${b.email}`, {
+    x: 0.7,
+    y: 4.3,
+    w: 8.6,
+    h: 0.4,
+    fontSize: 11,
+    color: MOSS_LIGHT,
+  });
 
   // --- about ---------------------------------------------------------------
   const about = slide();
-  about.addText('Who we are', { x: 0.6, y: 0.45, w: 9, h: 0.6, fontSize: 26, bold: true, color: MOSS_DARK });
+  about.addText('Who we are', {
+    x: 0.6,
+    y: 0.45,
+    w: 9,
+    h: 0.6,
+    fontSize: 26,
+    bold: true,
+    color: MOSS_DARK,
+  });
   about.addText(
     [
-      { text: `${b.legalName} supplies makhana (fox nut) at wholesale, and manufactures under private label for brands that want their own packaging.`, options: { breakLine: true, bullet: true } },
-      { text: `Based in ${b.city}, ${b.state} — inside the growing belt, which keeps sourcing short and rates competitive.`, options: { breakLine: true, bullet: true } },
-      { text: `FSSAI licensed (${b.fssaiNumber})${b.gstin ? `, GSTIN ${b.gstin}` : ''}.`, options: { breakLine: true, bullet: true } },
-      { text: 'Graded by sut size, moisture controlled below 8%, packed in food-grade laminated pouches.', options: { breakLine: true, bullet: true } },
+      {
+        text: `${b.legalName} supplies makhana (fox nut) at wholesale, and manufactures under private label for brands that want their own packaging.`,
+        options: { breakLine: true, bullet: true },
+      },
+      {
+        text: `Based in ${b.city}, ${b.state} — inside the growing belt, which keeps sourcing short and rates competitive.`,
+        options: { breakLine: true, bullet: true },
+      },
+      {
+        text: `FSSAI licensed (${b.fssaiNumber})${b.gstin ? `, GSTIN ${b.gstin}` : ''}.`,
+        options: { breakLine: true, bullet: true },
+      },
+      {
+        text: 'Graded by sut size, moisture controlled below 8%, packed in food-grade laminated pouches.',
+        options: { breakLine: true, bullet: true },
+      },
     ],
     { x: 0.8, y: 1.3, w: 8.4, h: 3, fontSize: 15, color: INK, lineSpacingMultiple: 1.4 },
   );
@@ -103,7 +140,15 @@ export async function generatePresentationPptx(
   const active = products.filter((p) => p.active);
   if (active.length > 0) {
     const range = slide();
-    range.addText('Product range', { x: 0.6, y: 0.45, w: 9, h: 0.6, fontSize: 26, bold: true, color: MOSS_DARK });
+    range.addText('Product range', {
+      x: 0.6,
+      y: 0.45,
+      w: 9,
+      h: 0.6,
+      fontSize: 26,
+      bold: true,
+      color: MOSS_DARK,
+    });
 
     const rows: PptxGenJS.TableRow[] = [
       [
@@ -111,15 +156,19 @@ export async function generatePresentationPptx(
         { text: 'Grade', options: { bold: true, color: PARCHMENT, fill: { color: MOSS } } },
         { text: 'Notes', options: { bold: true, color: PARCHMENT, fill: { color: MOSS } } },
       ],
-      ...active.slice(0, 8).map((p): PptxGenJS.TableRow => [
-        { text: p.name, options: { bold: true } },
-        { text: p.grade ?? '—' },
-        { text: (p.description ?? '').slice(0, 120), options: { fontSize: 10, color: FAINT } },
-      ]),
+      ...active
+        .slice(0, 8)
+        .map((p): PptxGenJS.TableRow => [
+          { text: p.name, options: { bold: true } },
+          { text: p.grade ?? '—' },
+          { text: (p.description ?? '').slice(0, 120), options: { fontSize: 10, color: FAINT } },
+        ]),
     ];
 
     range.addTable(rows, {
-      x: 0.6, y: 1.25, w: 8.8,
+      x: 0.6,
+      y: 1.25,
+      w: 8.8,
       colW: [3.1, 1.4, 4.3],
       fontSize: 11,
       border: { type: 'solid', color: 'DCD5C0', pt: 1 },
@@ -133,9 +182,23 @@ export async function generatePresentationPptx(
 
     if (priced.length > 0) {
       const pricing = slide();
-      pricing.addText('Indicative pricing', { x: 0.6, y: 0.45, w: 9, h: 0.6, fontSize: 26, bold: true, color: MOSS_DARK });
+      pricing.addText('Indicative pricing', {
+        x: 0.6,
+        y: 0.45,
+        w: 9,
+        h: 0.6,
+        fontSize: 26,
+        bold: true,
+        color: MOSS_DARK,
+      });
       pricing.addText('Ex-works, exclusive of GST. Rates firm for the quotation validity period.', {
-        x: 0.6, y: 1.0, w: 9, h: 0.3, fontSize: 11, color: FAINT, italic: true,
+        x: 0.6,
+        y: 1.0,
+        w: 9,
+        h: 0.3,
+        fontSize: 11,
+        color: FAINT,
+        italic: true,
       });
 
       const rows: PptxGenJS.TableRow[] = [
@@ -151,7 +214,9 @@ export async function generatePresentationPptx(
         tiers.forEach((tier, index) => {
           rows.push([
             { text: index === 0 ? product.name : '', options: { bold: index === 0 } },
-            { text: `${tier.minQty}${tier.maxQty === null ? '+' : `–${tier.maxQty}`} ${product.unit}` },
+            {
+              text: `${tier.minQty}${tier.maxQty === null ? '+' : `–${tier.maxQty}`} ${product.unit}`,
+            },
             {
               text: `Rs. ${formatIndian(decimalToNumber(tier.pricePerUnit) ?? 0)} / ${product.unit}`,
             },
@@ -160,7 +225,9 @@ export async function generatePresentationPptx(
       }
 
       pricing.addTable(rows, {
-        x: 0.6, y: 1.45, w: 8.8,
+        x: 0.6,
+        y: 1.45,
+        w: 8.8,
         colW: [4.0, 2.4, 2.4],
         fontSize: 11,
         border: { type: 'solid', color: 'DCD5C0', pt: 1 },
@@ -171,14 +238,34 @@ export async function generatePresentationPptx(
 
   // --- white label ---------------------------------------------------------
   const whiteLabel = slide();
-  whiteLabel.addText('White-label manufacturing', { x: 0.6, y: 0.45, w: 9, h: 0.6, fontSize: 26, bold: true, color: MOSS_DARK });
+  whiteLabel.addText('White-label manufacturing', {
+    x: 0.6,
+    y: 0.45,
+    w: 9,
+    h: 0.6,
+    fontSize: 26,
+    bold: true,
+    color: MOSS_DARK,
+  });
   whiteLabel.addText(
     [
       { text: 'Your brand, our production line', options: { breakLine: true, bullet: true } },
-      { text: 'Roasting, flavouring, pouch filling and labelling under one roof', options: { breakLine: true, bullet: true } },
-      { text: 'Artwork approval before production begins — no surprises on the shelf', options: { breakLine: true, bullet: true } },
-      { text: 'Nitrogen-flushed pouches for shelf life on ready-to-eat lines', options: { breakLine: true, bullet: true } },
-      { text: 'Typical MOQ 200 kg per SKU; lead time 7–10 working days after advance', options: { breakLine: true, bullet: true } },
+      {
+        text: 'Roasting, flavouring, pouch filling and labelling under one roof',
+        options: { breakLine: true, bullet: true },
+      },
+      {
+        text: 'Artwork approval before production begins — no surprises on the shelf',
+        options: { breakLine: true, bullet: true },
+      },
+      {
+        text: 'Nitrogen-flushed pouches for shelf life on ready-to-eat lines',
+        options: { breakLine: true, bullet: true },
+      },
+      {
+        text: 'Typical MOQ 200 kg per SKU; lead time 7–10 working days after advance',
+        options: { breakLine: true, bullet: true },
+      },
     ],
     { x: 0.8, y: 1.3, w: 8.4, h: 3, fontSize: 15, color: INK, lineSpacingMultiple: 1.4 },
   );
@@ -186,17 +273,37 @@ export async function generatePresentationPptx(
   // --- next steps ----------------------------------------------------------
   const contact = slide();
   contact.background = { color: MOSS_DARK };
-  contact.addText('Next steps', { x: 0.7, y: 1.3, w: 8.6, h: 0.7, fontSize: 30, bold: true, color: PARCHMENT });
+  contact.addText('Next steps', {
+    x: 0.7,
+    y: 1.3,
+    w: 8.6,
+    h: 0.7,
+    fontSize: 30,
+    bold: true,
+    color: PARCHMENT,
+  });
   contact.addText(
     [
-      { text: 'Tell us your grade, volume and packing format', options: { breakLine: true, bullet: true } },
+      {
+        text: 'Tell us your grade, volume and packing format',
+        options: { breakLine: true, bullet: true },
+      },
       { text: 'We send samples and a firm quotation', options: { breakLine: true, bullet: true } },
-      { text: 'Confirm the order with 50% advance; dispatch in 7–10 working days', options: { breakLine: true, bullet: true } },
+      {
+        text: 'Confirm the order with 50% advance; dispatch in 7–10 working days',
+        options: { breakLine: true, bullet: true },
+      },
     ],
     { x: 0.9, y: 2.2, w: 8.2, h: 1.5, fontSize: 15, color: MOSS_LIGHT, lineSpacingMultiple: 1.4 },
   );
   contact.addText(`${b.phone}   ·   ${b.email}${b.website ? `   ·   ${b.website}` : ''}`, {
-    x: 0.7, y: 4.1, w: 8.6, h: 0.5, fontSize: 14, bold: true, color: PARCHMENT,
+    x: 0.7,
+    y: 4.1,
+    w: 8.6,
+    h: 0.5,
+    fontSize: 14,
+    bold: true,
+    color: PARCHMENT,
   });
 
   const data = (await pptx.write({ outputType: 'nodebuffer' })) as Buffer;

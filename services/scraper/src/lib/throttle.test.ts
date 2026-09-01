@@ -6,7 +6,7 @@
  * the batch pause must actually happen at the batch boundary.
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { RequestBudgetExhausted, Throttle } from './throttle.js';
 
 /** Records every wait instead of performing it, so tests run instantly. */

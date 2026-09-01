@@ -5,6 +5,11 @@ build/
 coverage/
 *.tsbuildinfo
 
+# tsc must never emit next to sources; if it does, do not commit the output.
+apps/web/src/**/*.js
+apps/web/src/**/*.d.ts
+apps/web/src/**/*.js.map
+
 .env
 .env.local
 .env.*.local

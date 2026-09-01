@@ -7,12 +7,7 @@
 
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-} from '@tanstack/react-table';
+import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table';
 import {
   LEAD_SCORES,
   LEAD_SOURCES,
@@ -88,7 +83,9 @@ export function LeadsPage(): React.ReactElement {
     const next = new URLSearchParams(params);
     const current = next.getAll(key);
     next.delete(key);
-    for (const v of current.includes(value) ? current.filter((c) => c !== value) : [...current, value]) {
+    for (const v of current.includes(value)
+      ? current.filter((c) => c !== value)
+      : [...current, value]) {
       next.append(key, v);
     }
     next.delete('page');
@@ -160,7 +157,11 @@ export function LeadsPage(): React.ReactElement {
           <ScoreBadge score={row.original.score} value={row.original.scoreValue} />
         ),
       },
-      { id: 'stage', header: 'Stage', cell: ({ row }) => <StageBadge stage={row.original.stage} /> },
+      {
+        id: 'stage',
+        header: 'Stage',
+        cell: ({ row }) => <StageBadge stage={row.original.stage} />,
+      },
       {
         id: 'source',
         header: 'Source',
@@ -249,7 +250,9 @@ export function LeadsPage(): React.ReactElement {
             <button
               type="button"
               className="text-xs text-rust-500 hover:underline"
-              onClick={() => setParams(query.q ? new URLSearchParams({ q: query.q }) : new URLSearchParams())}
+              onClick={() =>
+                setParams(query.q ? new URLSearchParams({ q: query.q }) : new URLSearchParams())
+              }
             >
               Clear {activeFilters} filter{activeFilters === 1 ? '' : 's'}
             </button>

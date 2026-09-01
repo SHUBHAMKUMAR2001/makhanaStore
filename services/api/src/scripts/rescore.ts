@@ -19,7 +19,10 @@ async function main(): Promise<void> {
     if (done % 500 === 0 || done === all) logger.info(`  ${done}/${all}`);
   });
 
-  logger.info({ total, changed }, changed === 0 ? 'All scores already current' : 'Rescore complete');
+  logger.info(
+    { total, changed },
+    changed === 0 ? 'All scores already current' : 'Rescore complete',
+  );
 }
 
 main()

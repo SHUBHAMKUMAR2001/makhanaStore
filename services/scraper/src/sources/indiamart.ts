@@ -122,8 +122,7 @@ export function normalizeListing(
   const name = pick(raw, ['name', 'companyname', 'compname', 'glusrCompanyName', 'company_name']);
   if (!name) return null;
 
-  const city =
-    pick(raw, ['city', 'cityname', 'glusrUsrCity', 'city_name']) ?? fallback.city;
+  const city = pick(raw, ['city', 'cityname', 'glusrUsrCity', 'city_name']) ?? fallback.city;
 
   const phone = pick(raw, ['mobile', 'mob', 'phone', 'contactNumber', 'glusrUsrMobile']);
   const website = pick(raw, ['website', 'weburl', 'companyUrl']);

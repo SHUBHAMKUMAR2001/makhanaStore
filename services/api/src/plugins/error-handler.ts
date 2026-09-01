@@ -14,7 +14,11 @@ import type { ApiErrorBody } from '@lead/shared';
 import { env } from '../config/env.js';
 import { ApiError, zodIssues } from '../lib/errors.js';
 
-function body(code: string, message: string, details?: ApiErrorBody['error']['details']): ApiErrorBody {
+function body(
+  code: string,
+  message: string,
+  details?: ApiErrorBody['error']['details'],
+): ApiErrorBody {
   return { error: details ? { code, message, details } : { code, message } };
 }
 
@@ -26,10 +30,9 @@ function fromPrisma(error: Prisma.PrismaClientKnownRequestError): ApiError | nul
       const fields = Array.isArray(target) ? target.join(', ') : String(target ?? 'field');
       // dedupeKey is the interesting one: it means "this lead already exists".
       if (fields.includes('dedupeKey')) {
-        return ApiError.conflict(
-          'A lead with this name already exists in this city',
-          [{ path: 'name', message: 'Duplicate of an existing lead' }],
-        );
+        return ApiError.conflict('A lead with this name already exists in this city', [
+          { path: 'name', message: 'Duplicate of an existing lead' },
+        ]);
       }
       return ApiError.conflict(`A record with this ${fields} already exists`, [
         { path: fields, message: 'Must be unique' },
@@ -65,7 +68,9 @@ export function registerErrorHandler(app: FastifyInstance): void {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       const mapped = fromPrisma(error);
       if (mapped) {
-        void reply.status(mapped.statusCode).send(body(mapped.code, mapped.message, mapped.details));
+        void reply
+          .status(mapped.statusCode)
+          .send(body(mapped.code, mapped.message, mapped.details));
         return;
       }
     }

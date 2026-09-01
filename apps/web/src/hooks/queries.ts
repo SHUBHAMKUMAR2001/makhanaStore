@@ -158,8 +158,15 @@ export function useAddInteraction(id: string) {
 export function useImportCsv() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ csv, dryRun, defaultSource }: { csv: string; dryRun: boolean; defaultSource: string }) =>
-      api.postCsv<CsvImportResult>(`/leads/import${qs({ dryRun, defaultSource })}`, csv),
+    mutationFn: ({
+      csv,
+      dryRun,
+      defaultSource,
+    }: {
+      csv: string;
+      dryRun: boolean;
+      defaultSource: string;
+    }) => api.postCsv<CsvImportResult>(`/leads/import${qs({ dryRun, defaultSource })}`, csv),
     onSuccess: (_data, vars) => {
       if (!vars.dryRun) invalidateLead(qc);
     },
@@ -176,7 +183,10 @@ export function useDashboard(days: number): UseQueryResult<DashboardStats> {
 }
 
 export function useCampaigns(): UseQueryResult<CampaignDto[]> {
-  return useQuery({ queryKey: keys.campaigns, queryFn: () => api.get<CampaignDto[]>('/campaigns') });
+  return useQuery({
+    queryKey: keys.campaigns,
+    queryFn: () => api.get<CampaignDto[]>('/campaigns'),
+  });
 }
 
 export function useScraperRuns(query: { page?: number; pageSize?: number } = {}) {
@@ -213,7 +223,8 @@ function invalidateProducts(qc: ReturnType<typeof useQueryClient>): void {
 export function useCreateProduct() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: Record<string, unknown>) => api.post<ProductDto>('/catalogue/products', body),
+    mutationFn: (body: Record<string, unknown>) =>
+      api.post<ProductDto>('/catalogue/products', body),
     onSuccess: () => invalidateProducts(qc),
   });
 }

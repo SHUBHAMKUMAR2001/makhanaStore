@@ -31,12 +31,15 @@ export function ImportCsvModal({ onClose }: { onClose: () => void }): React.Reac
       <div className="space-y-3">
         <div className="rounded-sm border border-parchment-300 bg-parchment-100 px-3 py-2 text-xs text-ink-soft">
           <p className="font-medium">Expected columns</p>
-          <p className="mt-1 font-mono">name, category, city, regionTier, phone, email, website, source, notes</p>
+          <p className="mt-1 font-mono">
+            name, category, city, regionTier, phone, email, website, source, notes
+          </p>
           <p className="mt-1">
             Common spreadsheet headings are recognised too — &ldquo;Business Name&rdquo;,
             &ldquo;Mobile&rdquo;, &ldquo;Location&rdquo;, &ldquo;Tier&rdquo;, &ldquo;Remarks&rdquo;.
-            Only <span className="font-mono">name</span>, <span className="font-mono">category</span>{' '}
-            and <span className="font-mono">city</span> are required.
+            Only <span className="font-mono">name</span>,{' '}
+            <span className="font-mono">category</span> and <span className="font-mono">city</span>{' '}
+            are required.
           </p>
         </div>
 
@@ -99,7 +102,8 @@ export function ImportCsvModal({ onClose }: { onClose: () => void }): React.Reac
               {wasDryRun ? 'Dry run — nothing was written' : 'Import complete'}
             </p>
             <p className="tabular mt-1 text-xs">
-              {result.totalRows} rows · {result.created} {wasDryRun ? 'would be created' : 'created'}
+              {result.totalRows} rows · {result.created}{' '}
+              {wasDryRun ? 'would be created' : 'created'}
               {result.updated > 0 && ` · ${result.updated} updated`}
               {result.duplicates > 0 && ` · ${result.duplicates} duplicates skipped`}
               {result.failed > 0 && ` · ${result.failed} failed`}

@@ -86,7 +86,11 @@ export const TRADEINDIA: SiteSelectors = {
   ],
   name: ['.company-name', '[class*="companyName"]', 'h2 a', 'h3 a', '.sc-company-name'],
   phone: ['.contact-number', '[class*="phone"]', 'a[href^="tel:"]', '.mobile-no'],
-  website: ['a.company-website', '[class*="website"]', 'a[href*="tradeindia.com/"][rel="nofollow"]'],
+  website: [
+    'a.company-website',
+    '[class*="website"]',
+    'a[href*="tradeindia.com/"][rel="nofollow"]',
+  ],
   address: ['.company-address', '[class*="address"]', '.location-text'],
   category: ['.business-type', '[class*="businessType"]', '.company-category'],
   noResults: ['.no-result-found', '[class*="noResult"]', '.empty-state'],

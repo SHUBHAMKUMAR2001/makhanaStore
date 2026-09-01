@@ -51,15 +51,36 @@ export function DashboardPage(): React.ReactElement {
       />
 
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <StatTile label="Total leads" value={String(totals.leads)} sub={`${totals.openLeads} still open`} />
-        <StatTile label="Pipeline" value={formatMoneyCompact(totals.pipelineValue)} sub="Value in open stages" />
-        <StatTile label="Revenue" value={formatMoneyCompact(totals.revenue)} sub={`${totals.won} deals won`} tone="good" />
+        <StatTile
+          label="Total leads"
+          value={String(totals.leads)}
+          sub={`${totals.openLeads} still open`}
+        />
+        <StatTile
+          label="Pipeline"
+          value={formatMoneyCompact(totals.pipelineValue)}
+          sub="Value in open stages"
+        />
+        <StatTile
+          label="Revenue"
+          value={formatMoneyCompact(totals.revenue)}
+          sub={`${totals.won} deals won`}
+          tone="good"
+        />
         <StatTile
           label="Close rate"
           value={formatPercent(totals.closeRate)}
-          sub={totals.closeRate === null ? 'Nothing closed yet' : `${totals.won} won / ${totals.lost} lost`}
+          sub={
+            totals.closeRate === null
+              ? 'Nothing closed yet'
+              : `${totals.won} won / ${totals.lost} lost`
+          }
         />
-        <StatTile label="Avg deal" value={formatMoneyCompact(totals.averageDealValue)} sub="Across won deals" />
+        <StatTile
+          label="Avg deal"
+          value={formatMoneyCompact(totals.averageDealValue)}
+          sub="Across won deals"
+        />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -92,7 +113,10 @@ export function DashboardPage(): React.ReactElement {
               );
             })}
             <li className="flex items-center gap-2 border-t border-parchment-200 pt-1.5 text-sm">
-              <Link to="/leads?stage=closed_lost" className="w-28 shrink-0 text-rust-500 hover:underline">
+              <Link
+                to="/leads?stage=closed_lost"
+                className="w-28 shrink-0 text-rust-500 hover:underline"
+              >
                 {LEAD_STAGE_LABELS['closed_lost' as LeadStage]}
               </Link>
               <div className="h-4 flex-1 overflow-hidden rounded-sm bg-parchment-200">
@@ -153,16 +177,25 @@ export function DashboardPage(): React.ReactElement {
                 {bySource.map((row) => (
                   <tr key={row.source} className="ledger-row hover:bg-moss-100/40">
                     <td className="px-4 py-1.5">
-                      <Link to={`/leads?source=${row.source}`} className="text-moss-700 hover:underline">
+                      <Link
+                        to={`/leads?source=${row.source}`}
+                        className="text-moss-700 hover:underline"
+                      >
                         {LEAD_SOURCE_LABELS[row.source]}
                       </Link>
                     </td>
                     <td className="tabular px-4 py-1.5 text-right">{row.leads}</td>
-                    <td className="tabular px-4 py-1.5 text-right text-ink-faint">{row.contacted}</td>
+                    <td className="tabular px-4 py-1.5 text-right text-ink-faint">
+                      {row.contacted}
+                    </td>
                     <td className="tabular px-4 py-1.5 text-right text-ink-faint">{row.replied}</td>
                     <td className="tabular px-4 py-1.5 text-right">{row.won}</td>
-                    <td className="tabular px-4 py-1.5 text-right">{formatPercent(row.closeRate)}</td>
-                    <td className="tabular px-4 py-1.5 text-right">{formatMoney(row.pipelineValue)}</td>
+                    <td className="tabular px-4 py-1.5 text-right">
+                      {formatPercent(row.closeRate)}
+                    </td>
+                    <td className="tabular px-4 py-1.5 text-right">
+                      {formatMoney(row.pipelineValue)}
+                    </td>
                     <td className="tabular px-4 py-1.5 text-right text-moss-700">
                       {formatMoney(row.revenue)}
                     </td>
@@ -190,7 +223,10 @@ export function DashboardPage(): React.ReactElement {
           <ul className="space-y-1.5 text-sm">
             {byScore.map((band) => (
               <li key={band.score} className="flex items-center justify-between gap-2">
-                <Link to={`/leads?score=${band.score}`} className="capitalize text-moss-700 hover:underline">
+                <Link
+                  to={`/leads?score=${band.score}`}
+                  className="capitalize text-moss-700 hover:underline"
+                >
                   {band.score}
                 </Link>
                 <span className="tabular text-xs text-ink-faint">
@@ -200,11 +236,16 @@ export function DashboardPage(): React.ReactElement {
             ))}
           </ul>
 
-          <h3 className="mb-1.5 mt-4 text-xs uppercase tracking-wider text-ink-faint">Region tiers</h3>
+          <h3 className="mb-1.5 mt-4 text-xs uppercase tracking-wider text-ink-faint">
+            Region tiers
+          </h3>
           <ul className="space-y-1 text-sm">
             {byRegionTier.map((tier) => (
               <li key={tier.regionTier} className="flex items-center justify-between">
-                <Link to={`/leads?regionTier=${tier.regionTier}`} className="text-moss-700 hover:underline">
+                <Link
+                  to={`/leads?regionTier=${tier.regionTier}`}
+                  className="text-moss-700 hover:underline"
+                >
                   Tier {tier.regionTier}
                 </Link>
                 <span className="tabular text-xs text-ink-faint">

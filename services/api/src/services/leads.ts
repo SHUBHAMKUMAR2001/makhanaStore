@@ -8,7 +8,13 @@
  * spreads below overwrite it.
  */
 
-import { buildDedupeKey, type LeadListQuery, type LeadCreateInput, type LeadUpdateInput, type StageTransitionInput } from '@lead/shared';
+import {
+  buildDedupeKey,
+  type LeadListQuery,
+  type LeadCreateInput,
+  type LeadUpdateInput,
+  type StageTransitionInput,
+} from '@lead/shared';
 import { numberToDecimal, prisma, type Lead, type Prisma } from '@lead/db';
 import { scoreColumns } from '../scoring/index.js';
 import { ApiError } from '../lib/errors.js';
@@ -137,9 +143,7 @@ export async function updateLead(id: string, input: LeadUpdateInput): Promise<Le
   if (input.notes !== undefined) data.notes = input.notes ?? null;
   if (input.dealValue !== undefined) data.dealValue = numberToDecimal(input.dealValue ?? null);
   if (input.campaignId !== undefined) {
-    data.campaign = input.campaignId
-      ? { connect: { id: input.campaignId } }
-      : { disconnect: true };
+    data.campaign = input.campaignId ? { connect: { id: input.campaignId } } : { disconnect: true };
   }
 
   // Renaming or moving a lead changes its identity, so the dedupe key moves too.

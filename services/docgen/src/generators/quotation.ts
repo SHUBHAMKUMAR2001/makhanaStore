@@ -57,7 +57,12 @@ function para(
 
 function cell(
   children: Paragraph[],
-  opts: { width?: number; bold?: boolean; shaded?: boolean; align?: 'left' | 'right' | 'center' } = {},
+  opts: {
+    width?: number;
+    bold?: boolean;
+    shaded?: boolean;
+    align?: 'left' | 'right' | 'center';
+  } = {},
 ) {
   return new TableCell({
     children,
@@ -77,7 +82,12 @@ const alignFor = (align?: 'left' | 'right' | 'center') =>
 
 function textCell(
   value: string,
-  opts: { width?: number; bold?: boolean; shaded?: boolean; align?: 'left' | 'right' | 'center' } = {},
+  opts: {
+    width?: number;
+    bold?: boolean;
+    shaded?: boolean;
+    align?: 'left' | 'right' | 'center';
+  } = {},
 ) {
   return cell(
     [
@@ -133,8 +143,10 @@ function partyTable(ctx: QuotationContext): Table {
     para([text(ctx.lead.name, { bold: true, size: 11 })], { spacing: 20 }),
     para([text(ctx.lead.city, { size: 9.5, color: FAINT })], { spacing: 20 }),
   ];
-  if (ctx.lead.phone) buyerLines.push(para([text(ctx.lead.phone, { size: 9, color: FAINT })], { spacing: 20 }));
-  if (ctx.lead.email) buyerLines.push(para([text(ctx.lead.email, { size: 9, color: FAINT })], { spacing: 20 }));
+  if (ctx.lead.phone)
+    buyerLines.push(para([text(ctx.lead.phone, { size: 9, color: FAINT })], { spacing: 20 }));
+  if (ctx.lead.email)
+    buyerLines.push(para([text(ctx.lead.email, { size: 9, color: FAINT })], { spacing: 20 }));
 
   const metaLines = [
     para([text('QUOTATION NO.', { bold: true, size: 8.5, color: FAINT })], { spacing: 30 }),
@@ -146,8 +158,12 @@ function partyTable(ctx: QuotationContext): Table {
   return new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     borders: {
-      top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER,
-      insideHorizontal: NO_BORDER, insideVertical: NO_BORDER,
+      top: NO_BORDER,
+      bottom: NO_BORDER,
+      left: NO_BORDER,
+      right: NO_BORDER,
+      insideHorizontal: NO_BORDER,
+      insideVertical: NO_BORDER,
     },
     rows: [
       new TableRow({
@@ -201,7 +217,12 @@ function itemsTable(totals: QuotationTotals): Table {
     new TableRow({
       children: [
         new TableCell({
-          children: [new Paragraph({ children: [text(label, { bold, size: 9.5 })], alignment: AlignmentType.RIGHT })],
+          children: [
+            new Paragraph({
+              children: [text(label, { bold, size: 9.5 })],
+              alignment: AlignmentType.RIGHT,
+            }),
+          ],
           columnSpan: 5,
           margins: { top: 80, bottom: 80, left: 120, right: 120 },
           borders: { top: HAIRLINE, bottom: HAIRLINE, left: HAIRLINE, right: HAIRLINE },
@@ -246,10 +267,13 @@ export async function generateQuotationDocx(ctx: QuotationContext): Promise<{
     new Paragraph({ text: '', spacing: { after: 200 } }),
     itemsTable(totals),
     new Paragraph({ text: '', spacing: { after: 160 } }),
-    para([
-      text('Amount in words: ', { bold: true, size: 9.5 }),
-      text(totals.amountInWords, { size: 9.5 }),
-    ], { spacing: 200 }),
+    para(
+      [
+        text('Amount in words: ', { bold: true, size: 9.5 }),
+        text(totals.amountInWords, { size: 9.5 }),
+      ],
+      { spacing: 200 },
+    ),
   ];
 
   if (ctx.notes) {
@@ -260,7 +284,9 @@ export async function generateQuotationDocx(ctx: QuotationContext): Promise<{
   }
 
   if (b.quotationTerms.length > 0) {
-    children.push(para([text('Terms & Conditions', { bold: true, size: 10, color: MOSS })], { spacing: 60 }));
+    children.push(
+      para([text('Terms & Conditions', { bold: true, size: 10, color: MOSS })], { spacing: 60 }),
+    );
     for (const term of b.quotationTerms) {
       children.push(
         new Paragraph({

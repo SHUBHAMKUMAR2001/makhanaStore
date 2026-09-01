@@ -85,8 +85,10 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET must be set in .env}
       SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-720}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
-      DOCGEN_URL: ${DOCGEN_URL:-http://docgen:4100}
-      OUTREACH_URL: ${OUTREACH_URL:-http://outreach:4200}
+      # Derived here, not read from .env, for the same reason as DATABASE_URL:
+      # containers reach each other by service name, host tooling by localhost.
+      DOCGEN_URL: http://docgen:${DOCGEN_PORT:-4100}
+      OUTREACH_URL: http://outreach:${OUTREACH_PORT:-4200}
       STORAGE_DIR: ${STORAGE_DIR:-/data/storage}
       SCRAPER_SCHEDULE_ENABLED: ${SCRAPER_SCHEDULE_ENABLED:-false}
       SCRAPER_SCHEDULE_CRON: ${SCRAPER_SCHEDULE_CRON:-0 3 1 * *}
@@ -103,7 +105,12 @@ services:
         condition: service_completed_successfully
     healthcheck:
       test:
-        ['CMD', 'node', '-e', "fetch('http://127.0.0.1:'+(process.env.API_PORT||4000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:'+(process.env.API_PORT||4000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -176,7 +183,7 @@ services:
     restart: unless-stopped
     environment:
       <<: *node-env
-      API_URL: ${API_URL:-http://api:4000}
+      API_URL: http://api:${API_PORT:-4000}
       SCRAPER_MAX_REQUESTS_PER_RUN: ${SCRAPER_MAX_REQUESTS_PER_RUN:-300}
       SCRAPER_MIN_DELAY_MS: ${SCRAPER_MIN_DELAY_MS:-3500}
       SCRAPER_MAX_DELAY_MS: ${SCRAPER_MAX_DELAY_MS:-9000}

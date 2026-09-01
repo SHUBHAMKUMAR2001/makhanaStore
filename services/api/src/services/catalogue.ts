@@ -12,11 +12,7 @@
  */
 
 import { prisma, numberToDecimal, type Prisma, type Product } from '@lead/db';
-import type {
-  PriceTierCreateInput,
-  productCreateSchema,
-  productUpdateSchema,
-} from '@lead/shared';
+import type { PriceTierCreateInput, productCreateSchema, productUpdateSchema } from '@lead/shared';
 import type { z } from 'zod';
 import { ApiError } from '../lib/errors.js';
 
@@ -60,19 +56,16 @@ export async function getProductOrThrow(id: string): Promise<ProductWithTiers> {
  * quantity, and which one wins would depend on row order. A quotation quietly
  * priced from the wrong band is worse than a rejected edit.
  */
-export function validateTierLadder(
-  tiers: { minQty: number; maxQty?: number | null }[],
-): void {
+export function validateTierLadder(tiers: { minQty: number; maxQty?: number | null }[]): void {
   if (tiers.length === 0) return;
 
   const sorted = [...tiers].sort((a, b) => a.minQty - b.minQty);
 
   const openEnded = sorted.filter((t) => t.maxQty === null || t.maxQty === undefined);
   if (openEnded.length > 1) {
-    throw ApiError.unprocessable(
-      'Only one price tier may be open-ended (no maximum quantity)',
-      [{ path: 'priceTiers', message: `${openEnded.length} tiers have no maximum` }],
-    );
+    throw ApiError.unprocessable('Only one price tier may be open-ended (no maximum quantity)', [
+      { path: 'priceTiers', message: `${openEnded.length} tiers have no maximum` },
+    ]);
   }
 
   for (let i = 0; i < sorted.length; i += 1) {

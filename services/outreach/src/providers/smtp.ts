@@ -35,9 +35,7 @@ export class SmtpProvider implements OutreachProvider {
         host: env.SMTP_HOST,
         port: env.SMTP_PORT,
         secure: env.SMTP_SECURE,
-        ...(env.SMTP_USER
-          ? { auth: { user: env.SMTP_USER, pass: env.SMTP_PASSWORD } }
-          : {}),
+        ...(env.SMTP_USER ? { auth: { user: env.SMTP_USER, pass: env.SMTP_PASSWORD } } : {}),
       });
     }
     return this.transporter;

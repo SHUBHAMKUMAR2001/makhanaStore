@@ -24,8 +24,7 @@ import {
 // --- primitives ------------------------------------------------------------
 
 const trimmed = (max: number) => z.string().trim().max(max);
-const requiredText = (max: number, field: string) =>
-  trimmed(max).min(1, `${field} is required`);
+const requiredText = (max: number, field: string) => trimmed(max).min(1, `${field} is required`);
 
 /**
  * Indian phone numbers arrive from scrapers in a dozen shapes:
@@ -343,10 +342,10 @@ export const priceTierCreateSchema = z
     pricePerUnit: z.coerce.number().nonnegative('Price cannot be negative'),
     currency: trimmed(3).default('INR'),
   })
-  .refine(
-    (t) => t.maxQty === null || t.maxQty === undefined || t.maxQty >= t.minQty,
-    { message: 'Maximum quantity must be greater than or equal to the minimum', path: ['maxQty'] },
-  );
+  .refine((t) => t.maxQty === null || t.maxQty === undefined || t.maxQty >= t.minQty, {
+    message: 'Maximum quantity must be greater than or equal to the minimum',
+    path: ['maxQty'],
+  });
 export type PriceTierCreateInput = z.infer<typeof priceTierCreateSchema>;
 
 export const productCreateSchema = z.object({

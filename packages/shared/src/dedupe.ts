@@ -34,14 +34,16 @@ const NOISE_TOKENS = new Set([
 ]);
 
 function normalizeToken(value: string): string {
-  return value
-    .normalize('NFKD')
-    // Strip combining marks so accented spellings collide with plain ones.
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return (
+    value
+      .normalize('NFKD')
+      // Strip combining marks so accented spellings collide with plain ones.
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 }
 
 function stripNoise(value: string): string {

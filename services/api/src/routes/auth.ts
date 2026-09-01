@@ -33,7 +33,10 @@ export function registerAuthRoutes(app: FastifyInstance): void {
       // response time does not reveal which emails are registered.
       const ok = user
         ? await verifyPassword(user.passwordHash, password)
-        : await verifyPassword('$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHQ$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', password);
+        : await verifyPassword(
+            '$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHQ$aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            password,
+          );
 
       if (!user || !ok) {
         request.log.warn({ email }, 'Failed login attempt');

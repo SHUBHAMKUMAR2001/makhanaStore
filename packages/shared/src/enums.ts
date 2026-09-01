@@ -99,12 +99,7 @@ export const DOCUMENT_TYPES = ['quotation', 'presentation'] as const;
 export type DocumentType = (typeof DOCUMENT_TYPES)[number];
 
 /** Sources the scraper service can actually collect from. */
-export const SCRAPABLE_SOURCES = [
-  'indiamart',
-  'justdial',
-  'tradeindia',
-  'google_maps',
-] as const;
+export const SCRAPABLE_SOURCES = ['indiamart', 'justdial', 'tradeindia', 'google_maps'] as const;
 export type ScrapableSource = (typeof SCRAPABLE_SOURCES)[number];
 
 export const REGION_TIERS = [1, 2, 3] as const;

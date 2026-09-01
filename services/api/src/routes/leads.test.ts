@@ -203,7 +203,10 @@ describe('POST /leads/:id/stage', () => {
   it('moves a lead and logs the transition on the timeline', async () => {
     const lead = (await post('/leads', leadPayload())).json();
 
-    const res = await post(`/leads/${lead.id}/stage`, { stage: 'contacted', note: 'Left voicemail' });
+    const res = await post(`/leads/${lead.id}/stage`, {
+      stage: 'contacted',
+      note: 'Left voicemail',
+    });
     expect(res.statusCode).toBe(200);
     expect(res.json().stage).toBe('contacted');
 
@@ -247,9 +250,31 @@ describe('POST /leads/:id/stage', () => {
 
 describe('GET /leads', () => {
   beforeEach(async () => {
-    await post('/leads', leadPayload({ name: 'Alpha Wholesale', city: 'Delhi', regionTier: 1, source: 'indiamart' }));
-    await post('/leads', leadPayload({ name: 'Beta Kirana', city: 'Patna', regionTier: 3, category: 'Kirana Store', source: 'justdial', phone: null }));
-    await post('/leads', leadPayload({ name: 'Gamma Gifting', city: 'Mumbai', regionTier: 1, category: 'Corporate Gifting', source: 'indiamart' }));
+    await post(
+      '/leads',
+      leadPayload({ name: 'Alpha Wholesale', city: 'Delhi', regionTier: 1, source: 'indiamart' }),
+    );
+    await post(
+      '/leads',
+      leadPayload({
+        name: 'Beta Kirana',
+        city: 'Patna',
+        regionTier: 3,
+        category: 'Kirana Store',
+        source: 'justdial',
+        phone: null,
+      }),
+    );
+    await post(
+      '/leads',
+      leadPayload({
+        name: 'Gamma Gifting',
+        city: 'Mumbai',
+        regionTier: 1,
+        category: 'Corporate Gifting',
+        source: 'indiamart',
+      }),
+    );
   });
 
   it('paginates', async () => {

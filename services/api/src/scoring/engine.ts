@@ -131,8 +131,7 @@ export function scoreLead(lead: ScorableLead): ScoreResult {
   // A lead with no phone, email or website cannot be actioned at all, however
   // attractive its category. This keeps un-contactable rows out of the high
   // band instead of sending someone to chase a dead end.
-  const contactable =
-    hasUsableValue(lead.phone) || hasUsableValue(lead.email) || hasWebsite;
+  const contactable = hasUsableValue(lead.phone) || hasUsableValue(lead.email) || hasWebsite;
   contributions.push({
     signal: 'contactable',
     points: contactable ? SIGNAL_CAPS.contactable : 0,

@@ -84,6 +84,34 @@ use them at every boundary.
 cost constraint, not an oversight — please don't "fix" it by adding a proxy
 dependency.
 
+## Testing
+
+```bash
+pnpm test          # every package
+pnpm lint
+pnpm typecheck
+```
+
+**The API integration suite `TRUNCATE`s every table**, so it runs against a
+separate database. The vitest config derives a `<name>_test` sibling of
+`DATABASE_URL` (override with `TEST_DATABASE_URL`), and the reset helper refuses
+outright unless the database name contains "test". Create it once:
+
+```bash
+createdb -O lead lead_engine_test
+DATABASE_URL=postgresql://lead:...@localhost:5432/lead_engine_test pnpm db:migrate
+```
+
+| Package | Tests | Covers |
+| --- | ---: | --- |
+| `@lead/shared` | 18 | De-duplication key normalisation |
+| `@lead/db` | 10 | Enum parity between the schema and shared |
+| `@lead/api` | 174 | Scoring engine (band boundaries, every rule), lead API, catalogue |
+| `@lead/scraper` | 55 | Throttle pacing and caps, IndiaMART parsing, geo detection |
+| `@lead/docgen` | 41 | Money arithmetic, Indian numbering, storage path safety |
+| `@lead/outreach` | 17 | Provider contract, WhatsApp stub behaviour |
+| **Total** | **315** | |
+
 ## Commands
 
 | Command | Effect |
@@ -96,6 +124,9 @@ dependency.
 | `pnpm db:migrate` | Apply pending migrations |
 | `pnpm db:seed` | Seed admin user + business config (idempotent) |
 | `pnpm db:studio` | Open Prisma Studio |
+| `pnpm --filter @lead/api seed:demo` | 10 sample leads, scored by the engine |
+| `pnpm --filter @lead/api rescore` | Recompute scores after editing the rules |
+| `pnpm --filter @lead/scraper check-geo` | Verify this host can reach IndiaMART |
 
 ## Licence
 

@@ -193,10 +193,12 @@ describe('DELETE /catalogue/products/:id', () => {
 
 describe('price tiers', () => {
   it('adds a tier to an existing product', async () => {
-    const created = (await post(
-      '/catalogue/products',
-      product({ priceTiers: [{ minQty: 25, maxQty: 99, pricePerUnit: 620 }] }),
-    )).json();
+    const created = (
+      await post(
+        '/catalogue/products',
+        product({ priceTiers: [{ minQty: 25, maxQty: 99, pricePerUnit: 620 }] }),
+      )
+    ).json();
 
     const res = await post(`/catalogue/products/${created.id}/tiers`, {
       minQty: 100,

@@ -7,7 +7,12 @@
  */
 
 import type { FastifyInstance } from 'fastify';
-import { documentListQuerySchema, idParamSchema, presentationRequestSchema, quotationRequestSchema } from '@lead/shared';
+import {
+  documentListQuerySchema,
+  idParamSchema,
+  presentationRequestSchema,
+  quotationRequestSchema,
+} from '@lead/shared';
 import { prisma } from '@lead/db';
 import { env } from '../config/env.js';
 import { ApiError } from '../lib/errors.js';

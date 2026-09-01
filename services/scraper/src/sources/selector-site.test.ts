@@ -53,7 +53,9 @@ describe('cleanWebsite', () => {
   });
 
   it('rejects a link back to the directory itself — that is a profile, not a website', () => {
-    expect(cleanWebsite('https://www.justdial.com/Patna/Sharma-Traders', 'justdial.com')).toBeNull();
+    expect(
+      cleanWebsite('https://www.justdial.com/Patna/Sharma-Traders', 'justdial.com'),
+    ).toBeNull();
   });
 
   it('passes a genuine external website through', () => {
@@ -72,7 +74,14 @@ describe('site selector configs', () => {
   it.each(Object.entries(SITE_SELECTORS))('%s declares every field', (_name, config) => {
     // Each field needs at least one candidate, or extraction silently yields
     // null for it on every listing.
-    for (const field of ['resultItem', 'name', 'phone', 'website', 'address', 'category'] as const) {
+    for (const field of [
+      'resultItem',
+      'name',
+      'phone',
+      'website',
+      'address',
+      'category',
+    ] as const) {
       expect(config[field].length, `${config.label}.${field}`).toBeGreaterThan(0);
     }
     expect(config.noResults.length).toBeGreaterThan(0);

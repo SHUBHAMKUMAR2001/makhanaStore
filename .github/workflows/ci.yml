@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# A new push to the same branch makes the previous run irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Values used only by the test suite. Not secrets — the database is
+  # ephemeral and thrown away with the runner.
+  DATABASE_URL: postgresql://lead:lead@localhost:5432/lead_engine_test?schema=public
+  REDIS_URL: redis://localhost:6379
+  SESSION_SECRET: ci-session-secret-at-least-32-characters-long
+  INTERNAL_API_TOKEN: ci-internal-token-at-least-32-characters-long
+  STORAGE_DIR: /tmp/lead-storage
+  NODE_ENV: test
+  DISABLE_QUEUE: 'true'
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The Prisma client is generated code that everything else types against,
+      # so it must exist before any typecheck runs.
+      - name: Generate Prisma client
+        run: pnpm --filter @lead/db generate
+
+      - name: Build shared packages
+        run: pnpm --filter @lead/shared build && pnpm --filter @lead/db build
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lead
+          POSTGRES_PASSWORD: lead
+          POSTGRES_DB: lead_engine_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # Puppeteer's Chromium is not needed for the unit tests and is a slow
+      # download; the scraper tests exercise parsing, not a live browser.
+      - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+
+      - name: Apply migrations
+        run: pnpm --filter @lead/db migrate
+
+      - name: Build shared packages
+        run: pnpm --filter @lead/shared build && pnpm --filter @lead/db build
+
+      - name: Run tests
+        run: pnpm -r test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+
+      - run: pnpm --filter @lead/db generate
+
+      - name: Build everything
+        run: pnpm build

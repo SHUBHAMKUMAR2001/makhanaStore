@@ -124,9 +124,7 @@ export function serializeProduct(row: ProductRow): ProductDto {
     unit: row.unit,
     active: row.active,
     sortOrder: row.sortOrder,
-    priceTiers: [...row.priceTiers]
-      .sort((a, b) => a.minQty - b.minQty)
-      .map(serializePriceTier),
+    priceTiers: [...row.priceTiers].sort((a, b) => a.minQty - b.minQty).map(serializePriceTier),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

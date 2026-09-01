@@ -94,13 +94,19 @@ async function main(): Promise<void> {
     } else {
       // Warn, loudly and at boot: a provider that silently cannot send is the
       // failure you discover a week later when nobody has replied.
-      logger.warn({ channel: p.channel, provider: p.provider, reason: p.reason }, 'Outreach channel NOT available');
+      logger.warn(
+        { channel: p.channel, provider: p.provider, reason: p.reason },
+        'Outreach channel NOT available',
+      );
     }
   }
 
   const shutdown = (signal: string): void => {
     logger.info({ signal }, 'Shutting down');
-    void app.close().then(disconnectPrisma).then(() => process.exit(0));
+    void app
+      .close()
+      .then(disconnectPrisma)
+      .then(() => process.exit(0));
   };
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));

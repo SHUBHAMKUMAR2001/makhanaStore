@@ -96,9 +96,7 @@ export function CataloguePage(): React.ReactElement {
                   <span className="tabular rounded-sm bg-parchment-200 px-1.5 py-0.5 text-xs text-ink-faint">
                     {product.sku}
                   </span>
-                  {product.grade && (
-                    <span className="text-xs text-ink-faint">{product.grade}</span>
-                  )}
+                  {product.grade && <span className="text-xs text-ink-faint">{product.grade}</span>}
                   {!product.active && (
                     <span className="rounded-sm bg-rust-100 px-1.5 py-0.5 text-xs text-rust-700">
                       Retired
@@ -112,11 +110,7 @@ export function CataloguePage(): React.ReactElement {
 
               <div className="flex shrink-0 gap-2">
                 {product.active ? (
-                  <button
-                    type="button"
-                    className="btn-danger"
-                    onClick={() => setDeleting(product)}
-                  >
+                  <button type="button" className="btn-danger" onClick={() => setDeleting(product)}>
                     Remove
                   </button>
                 ) : (

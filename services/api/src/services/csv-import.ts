@@ -12,41 +12,46 @@
  */
 
 import { parse } from 'csv-parse/sync';
-import { buildDedupeKey, csvLeadRowSchema, type CsvImportOptions, type CsvImportResult } from '@lead/shared';
+import {
+  buildDedupeKey,
+  csvLeadRowSchema,
+  type CsvImportOptions,
+  type CsvImportResult,
+} from '@lead/shared';
 import { ApiError } from '../lib/errors.js';
 import { createOrGetLead } from './leads.js';
 
 /** Header aliases, so an export from a spreadsheet does not need hand-editing. */
 const HEADER_ALIASES: Record<string, string> = {
   'business name': 'name',
-  'company': 'name',
+  company: 'name',
   'company name': 'name',
-  'firm': 'name',
+  firm: 'name',
   'lead name': 'name',
   'business type': 'category',
-  'type': 'category',
-  'industry': 'category',
-  'segment': 'category',
-  'location': 'city',
-  'town': 'city',
+  type: 'category',
+  industry: 'category',
+  segment: 'category',
+  location: 'city',
+  town: 'city',
   'region tier': 'regionTier',
-  'tier': 'regionTier',
-  'regiontier': 'regionTier',
-  'mobile': 'phone',
-  'contact': 'phone',
+  tier: 'regionTier',
+  regiontier: 'regionTier',
+  mobile: 'phone',
+  contact: 'phone',
   'contact number': 'phone',
   'phone number': 'phone',
   'email address': 'email',
   'e-mail': 'email',
-  'web': 'website',
-  'url': 'website',
-  'site': 'website',
+  web: 'website',
+  url: 'website',
+  site: 'website',
   'deal value': 'dealValue',
-  'dealvalue': 'dealValue',
-  'value': 'dealValue',
-  'remarks': 'notes',
-  'note': 'notes',
-  'comment': 'notes',
+  dealvalue: 'dealValue',
+  value: 'dealValue',
+  remarks: 'notes',
+  note: 'notes',
+  comment: 'notes',
 };
 
 function normalizeHeader(header: string): string {

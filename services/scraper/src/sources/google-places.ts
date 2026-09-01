@@ -26,7 +26,7 @@ interface PlacesResponse {
     internationalPhoneNumber?: string;
     websiteUri?: string;
     primaryTypeDisplayName?: { text?: string };
-addressComponents?: { longText?: string; types?: string[] }[];
+    addressComponents?: { longText?: string; types?: string[] }[];
   }[];
   nextPageToken?: string;
 }

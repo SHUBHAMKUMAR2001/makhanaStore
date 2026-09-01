@@ -50,7 +50,13 @@ export function NewLeadModal({ onClose }: { onClose: () => void }): React.ReactE
     <Modal title="Add a lead" onClose={onClose}>
       <form onSubmit={submit} className="space-y-3">
         <Field label="Business name" error={fieldError('name')} required>
-          <input className="field" value={form.name} onChange={(e) => set('name', e.target.value)} required autoFocus />
+          <input
+            className="field"
+            value={form.name}
+            onChange={(e) => set('name', e.target.value)}
+            required
+            autoFocus
+          />
         </Field>
 
         <Field
@@ -59,15 +65,29 @@ export function NewLeadModal({ onClose }: { onClose: () => void }): React.ReactE
           hint="Free text — the scoring engine keyword-matches it (e.g. 'Dry Fruit Wholesaler')"
           required
         >
-          <input className="field" value={form.category} onChange={(e) => set('category', e.target.value)} required />
+          <input
+            className="field"
+            value={form.category}
+            onChange={(e) => set('category', e.target.value)}
+            required
+          />
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="City" error={fieldError('city')} required>
-            <input className="field" value={form.city} onChange={(e) => set('city', e.target.value)} required />
+            <input
+              className="field"
+              value={form.city}
+              onChange={(e) => set('city', e.target.value)}
+              required
+            />
           </Field>
           <Field label="Region tier">
-            <select className="field" value={form.regionTier} onChange={(e) => set('regionTier', e.target.value)}>
+            <select
+              className="field"
+              value={form.regionTier}
+              onChange={(e) => set('regionTier', e.target.value)}
+            >
               {([1, 2, 3] as const).map((t) => (
                 <option key={t} value={t}>
                   {REGION_TIER_LABELS[t]}
@@ -79,19 +99,42 @@ export function NewLeadModal({ onClose }: { onClose: () => void }): React.ReactE
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Phone" error={fieldError('phone')}>
-            <input className="field" value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+91 98765 43210" />
+            <input
+              className="field"
+              value={form.phone}
+              onChange={(e) => set('phone', e.target.value)}
+              placeholder="+91 98765 43210"
+            />
           </Field>
           <Field label="Email" error={fieldError('email')}>
-            <input className="field" type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
+            <input
+              className="field"
+              type="email"
+              value={form.email}
+              onChange={(e) => set('email', e.target.value)}
+            />
           </Field>
         </div>
 
-        <Field label="Website" error={fieldError('website')} hint="A bare domain is fine — it gets normalised">
-          <input className="field" value={form.website} onChange={(e) => set('website', e.target.value)} placeholder="acmefoods.in" />
+        <Field
+          label="Website"
+          error={fieldError('website')}
+          hint="A bare domain is fine — it gets normalised"
+        >
+          <input
+            className="field"
+            value={form.website}
+            onChange={(e) => set('website', e.target.value)}
+            placeholder="acmefoods.in"
+          />
         </Field>
 
         <Field label="Source">
-          <select className="field" value={form.source} onChange={(e) => set('source', e.target.value)}>
+          <select
+            className="field"
+            value={form.source}
+            onChange={(e) => set('source', e.target.value)}
+          >
             {LEAD_SOURCES.map((s) => (
               <option key={s} value={s}>
                 {LEAD_SOURCE_LABELS[s]}
@@ -101,7 +144,12 @@ export function NewLeadModal({ onClose }: { onClose: () => void }): React.ReactE
         </Field>
 
         <Field label="Notes">
-          <textarea className="field" rows={2} value={form.notes} onChange={(e) => set('notes', e.target.value)} />
+          <textarea
+            className="field"
+            rows={2}
+            value={form.notes}
+            onChange={(e) => set('notes', e.target.value)}
+          />
         </Field>
 
         {create.isError && <ErrorNote error={create.error} />}

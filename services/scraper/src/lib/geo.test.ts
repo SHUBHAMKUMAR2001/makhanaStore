@@ -23,7 +23,9 @@ function fakePage(url: string, bodyText = 'Showing 42 results for makhana'): nev
 
 describe('assertNotBlockedStatus', () => {
   it('treats 403 as a geo-block with an actionable message', () => {
-    expect(() => assertNotBlockedStatus(403, 'https://dir.indiamart.com/x')).toThrow(GeoBlockedError);
+    expect(() => assertNotBlockedStatus(403, 'https://dir.indiamart.com/x')).toThrow(
+      GeoBlockedError,
+    );
     expect(() => assertNotBlockedStatus(403, 'https://dir.indiamart.com/x')).toThrow(/Indian IP/);
   });
 
@@ -73,7 +75,10 @@ describe('assertNotGeoBlocked', () => {
 
   it('accepts a normal results page', async () => {
     await expect(
-      assertNotGeoBlocked(fakePage('https://dir.indiamart.com/search.mp?ss=makhana'), 'indiamart.com'),
+      assertNotGeoBlocked(
+        fakePage('https://dir.indiamart.com/search.mp?ss=makhana'),
+        'indiamart.com',
+      ),
     ).resolves.toBeUndefined();
   });
 });
@@ -85,7 +90,10 @@ describe('detectCountry', () => {
       json: async () => ({ country_code: 'IN' }),
     });
 
-    await expect(detectCountry(fetchImpl as never)).resolves.toEqual({ country: 'IN', checked: true });
+    await expect(detectCountry(fetchImpl as never)).resolves.toEqual({
+      country: 'IN',
+      checked: true,
+    });
   });
 
   it('reports "not checked" when the lookup fails — that is not evidence of a block', async () => {

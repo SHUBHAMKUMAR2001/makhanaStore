@@ -89,19 +89,30 @@ export function CampaignsPage(): React.ReactElement {
                       <span className="text-ink-faint"> · {run.city}</span>
                     </td>
                     <td className="px-4 py-1.5">
-                      <span className={`rounded-sm px-1.5 py-0.5 text-xs ${STATUS_STYLES[run.status]}`}>
+                      <span
+                        className={`rounded-sm px-1.5 py-0.5 text-xs ${STATUS_STYLES[run.status]}`}
+                      >
                         {SCRAPER_RUN_STATUS_LABELS[run.status]}
                       </span>
                       {run.error && (
-                        <p className="mt-0.5 max-w-xs truncate text-xs text-rust-500" title={run.error}>
+                        <p
+                          className="mt-0.5 max-w-xs truncate text-xs text-rust-500"
+                          title={run.error}
+                        >
                           {run.error}
                         </p>
                       )}
                     </td>
                     <td className="tabular px-4 py-1.5 text-right">{run.leadsFound}</td>
-                    <td className="tabular px-4 py-1.5 text-right text-moss-700">{run.leadsCreated}</td>
-                    <td className="tabular px-4 py-1.5 text-right text-ink-faint">{run.leadsDuplicate}</td>
-                    <td className="tabular px-4 py-1.5 text-right text-ink-faint">{run.requestsMade}</td>
+                    <td className="tabular px-4 py-1.5 text-right text-moss-700">
+                      {run.leadsCreated}
+                    </td>
+                    <td className="tabular px-4 py-1.5 text-right text-ink-faint">
+                      {run.leadsDuplicate}
+                    </td>
+                    <td className="tabular px-4 py-1.5 text-right text-ink-faint">
+                      {run.requestsMade}
+                    </td>
                     <td
                       className="px-4 py-1.5 text-right text-xs text-ink-faint"
                       title={formatDateTime(run.requestedAt)}
@@ -146,11 +157,15 @@ export function CampaignsPage(): React.ReactElement {
                 {campaigns.data.map((c) => (
                   <tr key={c.id} className="ledger-row hover:bg-moss-100/40">
                     <td className="px-4 py-1.5">{c.name}</td>
-                    <td className="px-4 py-1.5 text-ink-faint">{CAMPAIGN_CHANNEL_LABELS[c.channel]}</td>
+                    <td className="px-4 py-1.5 text-ink-faint">
+                      {CAMPAIGN_CHANNEL_LABELS[c.channel]}
+                    </td>
                     <td className="tabular px-4 py-1.5 text-right">{c.leadCount}</td>
                     <td className="tabular px-4 py-1.5 text-right">{c.wonCount}</td>
                     <td className="tabular px-4 py-1.5 text-right">{formatMoney(c.spend)}</td>
-                    <td className="tabular px-4 py-1.5 text-right text-moss-700">{formatMoney(c.revenue)}</td>
+                    <td className="tabular px-4 py-1.5 text-right text-moss-700">
+                      {formatMoney(c.revenue)}
+                    </td>
                     <td className="tabular px-4 py-1.5 text-right">
                       {c.spend && c.spend > 0 ? formatPercent(c.revenue / c.spend) : '—'}
                     </td>
@@ -215,7 +230,11 @@ function StartScrapeModal({ onClose }: { onClose: () => void }): React.ReactElem
           </select>
         </Field>
 
-        <Field label="Search term" hint="What you would type into the site's own search box" required>
+        <Field
+          label="Search term"
+          hint="What you would type into the site's own search box"
+          required
+        >
           <input
             className="field"
             value={form.category}

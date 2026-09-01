@@ -25,12 +25,23 @@ const envSchema = z.object({
 
   SESSION_SECRET: z
     .string()
-    .min(32, 'SESSION_SECRET must be at least 32 characters — generate one with `openssl rand -hex 32`'),
-  SESSION_TTL_HOURS: z.coerce.number().int().min(1).max(24 * 365).default(720),
+    .min(
+      32,
+      'SESSION_SECRET must be at least 32 characters — generate one with `openssl rand -hex 32`',
+    ),
+  SESSION_TTL_HOURS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 365)
+    .default(720),
 
   INTERNAL_API_TOKEN: z
     .string()
-    .min(32, 'INTERNAL_API_TOKEN must be at least 32 characters — generate one with `openssl rand -hex 32`'),
+    .min(
+      32,
+      'INTERNAL_API_TOKEN must be at least 32 characters — generate one with `openssl rand -hex 32`',
+    ),
 
   /** Comma-separated. Credentialed CORS forbids `*`, so this must be explicit. */
   CORS_ORIGINS: z.string().default('http://localhost:5173'),

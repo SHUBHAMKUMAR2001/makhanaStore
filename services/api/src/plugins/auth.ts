@@ -21,9 +21,7 @@ import { ApiError } from '../lib/errors.js';
 export const SESSION_COOKIE = 'lead_session';
 
 /** Who is making the request. `internal` is a trusted service, not a person. */
-export type Actor =
-  | { kind: 'user'; user: User }
-  | { kind: 'internal' };
+export type Actor = { kind: 'user'; user: User } | { kind: 'internal' };
 
 declare module 'fastify' {
   interface FastifyRequest {

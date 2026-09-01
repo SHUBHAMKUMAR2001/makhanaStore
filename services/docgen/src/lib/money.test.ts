@@ -64,7 +64,9 @@ describe('computeTotals', () => {
   });
 
   it('rejects an empty quotation', () => {
-    expect(() => computeTotals([], { taxPercent: 5, freight: 0 })).toThrow(/at least one line item/);
+    expect(() => computeTotals([], { taxPercent: 5, freight: 0 })).toThrow(
+      /at least one line item/,
+    );
   });
 
   it('rejects a zero or negative quantity', () => {

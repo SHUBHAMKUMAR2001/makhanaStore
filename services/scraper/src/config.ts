@@ -19,7 +19,9 @@ const envSchema = z.object({
 
   REDIS_URL: z.string().default('redis://localhost:6379'),
   API_URL: z.string().default('http://localhost:4000'),
-  INTERNAL_API_TOKEN: z.string().min(32, 'INTERNAL_API_TOKEN is required for the scraper to post leads'),
+  INTERNAL_API_TOKEN: z
+    .string()
+    .min(32, 'INTERNAL_API_TOKEN is required for the scraper to post leads'),
 
   /** Hard ceiling on page requests per run. The single most important limit. */
   SCRAPER_MAX_REQUESTS_PER_RUN: z.coerce.number().int().min(1).max(2000).default(300),

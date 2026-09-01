@@ -13,18 +13,38 @@ import type { FastifyInstance } from 'fastify';
 import { buildApp } from '../app.js';
 import { createSession, hashPassword } from '../plugins/auth.js';
 
-export async function resetDatabase(): Promise<void> {
-  // This TRUNCATEs every table. Running the suite against a database holding
-  // real leads would destroy them, and the only thing standing between those
-  // two outcomes is which DATABASE_URL happened to be exported — so refuse
-  // outright unless the environment says it is a test run.
-  if (process.env['NODE_ENV'] !== 'test') {
+/**
+ * Refuse to truncate anything that is not obviously a throwaway database.
+ *
+ * An earlier version only checked NODE_ENV, which vitest sets itself — so it
+ * protected against nothing and the suite twice wiped the development
+ * database. The database NAME is the thing the developer actually controls, so
+ * that is what gets checked.
+ */
+function assertDisposableDatabase(): void {
+  const url = process.env['DATABASE_URL'] ?? '';
+
+  let databaseName = '';
+  try {
+    databaseName = new URL(url).pathname.replace(/^\//, '');
+  } catch {
+    throw new Error(`resetDatabase() refused to run: DATABASE_URL is not a valid URL (${url})`);
+  }
+
+  const looksDisposable = /(^|[_-])test($|[_-])|_test$|^test_/.test(databaseName);
+
+  if (!looksDisposable && process.env['ALLOW_DESTRUCTIVE_TESTS'] !== 'true') {
     throw new Error(
-      'resetDatabase() refused to run: NODE_ENV is ' +
-        `"${process.env['NODE_ENV'] ?? 'unset'}", not "test". This function truncates every ` +
-        'table. Run the suite with NODE_ENV=test and a throwaway DATABASE_URL.',
+      `resetDatabase() refused to run against database "${databaseName}".\n\n` +
+        'This function TRUNCATEs every table. Point DATABASE_URL at a database whose\n' +
+        'name contains "test" (e.g. lead_engine_test), or set\n' +
+        'ALLOW_DESTRUCTIVE_TESTS=true if you really mean to wipe this one.',
     );
   }
+}
+
+export async function resetDatabase(): Promise<void> {
+  assertDisposableDatabase();
 
   await prisma.$executeRawUnsafe(`
     TRUNCATE TABLE "Interaction", "Document", "Lead", "ScraperRun", "Campaign",

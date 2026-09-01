@@ -27,6 +27,7 @@ import {
 import { ScoreBadge, SourceTag, StageBadge } from '../components/badges';
 import { ErrorNote, Modal, PageHeader, Spinner } from '../components/ui';
 import { formatDateTime, formatMoney, formatPhone, formatRelative } from '../lib/format';
+import { OutreachModal, QuotationModal } from '../components/LeadActions';
 
 export function LeadDetailPage(): React.ReactElement {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +44,8 @@ export function LeadDetailPage(): React.ReactElement {
   const [wonModal, setWonModal] = useState(false);
   const [dealValue, setDealValue] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showQuotation, setShowQuotation] = useState(false);
+  const [showOutreach, setShowOutreach] = useState(false);
 
   if (lead.isLoading) return <Spinner label="Loading lead" />;
   if (lead.isError) return <ErrorNote error={lead.error} />;
@@ -64,7 +67,11 @@ export function LeadDetailPage(): React.ReactElement {
     event.preventDefault();
     if (!note.trim()) return;
     addInteraction.mutate(
-      { type: noteType, content: note.trim(), direction: noteType === 'note' ? 'internal' : 'outbound' },
+      {
+        type: noteType,
+        content: note.trim(),
+        direction: noteType === 'note' ? 'internal' : 'outbound',
+      },
       { onSuccess: () => setNote('') },
     );
   }
@@ -79,6 +86,12 @@ export function LeadDetailPage(): React.ReactElement {
             <Link to="/leads" className="btn-secondary">
               Back to leads
             </Link>
+            <button type="button" className="btn-secondary" onClick={() => setShowOutreach(true)}>
+              Email
+            </button>
+            <button type="button" className="btn-primary" onClick={() => setShowQuotation(true)}>
+              Quotation
+            </button>
             <button type="button" className="btn-danger" onClick={() => setConfirmDelete(true)}>
               Delete
             </button>
@@ -101,7 +114,9 @@ export function LeadDetailPage(): React.ReactElement {
               <Row label="Source">
                 <SourceTag source={l.source} />
               </Row>
-              <Row label="Region">{REGION_TIER_LABELS[l.regionTier as 1 | 2 | 3] ?? `Tier ${l.regionTier}`}</Row>
+              <Row label="Region">
+                {REGION_TIER_LABELS[l.regionTier as 1 | 2 | 3] ?? `Tier ${l.regionTier}`}
+              </Row>
               <Row label="Phone">
                 {l.phone ? (
                   <a href={`tel:${l.phone}`} className="tabular text-moss-700 hover:underline">
@@ -122,7 +137,12 @@ export function LeadDetailPage(): React.ReactElement {
               </Row>
               <Row label="Website">
                 {l.website ? (
-                  <a href={l.website} target="_blank" rel="noreferrer noopener" className="text-moss-700 hover:underline">
+                  <a
+                    href={l.website}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="text-moss-700 hover:underline"
+                  >
                     {l.website.replace(/^https?:\/\//, '')}
                   </a>
                 ) : (
@@ -270,7 +290,11 @@ export function LeadDetailPage(): React.ReactElement {
                   </option>
                 ))}
               </select>
-              <button type="submit" className="btn-primary" disabled={!note.trim() || addInteraction.isPending}>
+              <button
+                type="submit"
+                className="btn-primary"
+                disabled={!note.trim() || addInteraction.isPending}
+              >
                 Log
               </button>
             </div>
@@ -311,6 +335,9 @@ export function LeadDetailPage(): React.ReactElement {
           )}
         </section>
       </div>
+
+      {showQuotation && <QuotationModal lead={l} onClose={() => setShowQuotation(false)} />}
+      {showOutreach && <OutreachModal lead={l} onClose={() => setShowOutreach(false)} />}
 
       {wonModal && (
         <Modal title="Mark this deal won" onClose={() => setWonModal(false)}>
@@ -380,7 +407,13 @@ export function LeadDetailPage(): React.ReactElement {
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }): React.ReactElement {
+function Row({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}): React.ReactElement {
   return (
     <div className="flex items-baseline justify-between gap-3">
       <dt className="shrink-0 text-xs uppercase tracking-wider text-ink-faint">{label}</dt>

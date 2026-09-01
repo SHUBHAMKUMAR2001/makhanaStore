@@ -33,13 +33,12 @@ describe('resolveStoragePath', () => {
     expect(resolveStoragePath('quotation/2026/09/a.docx')).toContain('quotation/2026/09/a.docx');
   });
 
-  it.each([
-    '../../../etc/passwd',
-    'quotation/../../../etc/shadow',
-    '../outside.docx',
-  ])('refuses the traversal %s', (path) => {
-    expect(() => resolveStoragePath(path)).toThrow(/escapes the storage directory/);
-  });
+  it.each(['../../../etc/passwd', 'quotation/../../../etc/shadow', '../outside.docx'])(
+    'refuses the traversal %s',
+    (path) => {
+      expect(() => resolveStoragePath(path)).toThrow(/escapes the storage directory/);
+    },
+  );
 
   it('allows a path that merely contains dots inside a filename', () => {
     expect(() => resolveStoragePath('quotation/2026/09/q..2.docx')).not.toThrow();

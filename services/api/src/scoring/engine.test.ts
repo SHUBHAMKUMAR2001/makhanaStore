@@ -156,7 +156,9 @@ describe('scoreLead — band boundaries reached through real leads', () => {
 
 describe('scoreLead — category rules', () => {
   it.each(
-    CATEGORY_RULES.flatMap((rule) => rule.examples.map((example) => [rule.id, example, rule] as const)),
+    CATEGORY_RULES.flatMap((rule) =>
+      rule.examples.map((example) => [rule.id, example, rule] as const),
+    ),
   )('rule "%s" catches the listing "%s"', (_id, example, rule) => {
     const matched = matchCategoryRule(example);
 
@@ -188,9 +190,9 @@ describe('scoreLead — category rules', () => {
         // Remove the regex constructs that legitimately contain punctuation,
         // then look for literal punctuation in what remains.
         const literals = pattern.source
-          .replace(/\\[a-zA-Z]/g, '')     // escape classes: \b \s \d ...
-          .replace(/\[[^\]]*\]/g, '')      // character classes: [\s-]
-          .replace(/[(){}|?*+^$]/g, '');    // grouping and quantifiers
+          .replace(/\\[a-zA-Z]/g, '') // escape classes: \b \s \d ...
+          .replace(/\[[^\]]*\]/g, '') // character classes: [\s-]
+          .replace(/[(){}|?*+^$]/g, ''); // grouping and quantifiers
 
         const stripped = literals.match(/[^a-zA-Z0-9\s]/g);
         if (stripped) {
@@ -303,7 +305,12 @@ describe('scoreLead — website and contactability signals', () => {
     // The signal's job is to separate it from an otherwise identical lead we
     // can actually reach, which scores 10 higher.
     expect(result.band).toBe('high');
-    const reachable = scoreLead({ ...lead(), category: 'Private Label Contract Manufacturing', regionTier: 1, phone: '99' });
+    const reachable = scoreLead({
+      ...lead(),
+      category: 'Private Label Contract Manufacturing',
+      regionTier: 1,
+      phone: '99',
+    });
     expect(reachable.value).toBe(result.value + SIGNAL_CAPS.contactable);
   });
 });

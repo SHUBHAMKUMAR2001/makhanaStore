@@ -54,13 +54,15 @@ export interface QuotationContext {
 export function buildQuotationNumber(date: Date, seed: string): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
-  const suffix = seed.replace(/[^a-zA-Z0-9]/g, '').slice(-5).toUpperCase().padStart(5, '0');
+  const suffix = seed
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .slice(-5)
+    .toUpperCase()
+    .padStart(5, '0');
   return `Q/${y}${m}/${suffix}`;
 }
 
-export async function buildQuotationContext(
-  request: QuotationRequest,
-): Promise<QuotationContext> {
+export async function buildQuotationContext(request: QuotationRequest): Promise<QuotationContext> {
   const [lead, business] = await Promise.all([
     prisma.lead.findUnique({ where: { id: request.leadId } }),
     prisma.businessProfile.findUnique({ where: { id: 'default' } }),
@@ -109,7 +111,7 @@ export async function buildQuotationContext(
             product.priceTiers.length === 0
               ? `"${product.name}" has no price tiers configured, so it cannot be quoted.`
               : `${item.quantity} ${unit} of "${product.name}" is below the minimum order of ` +
-                `${lowest} ${unit}. Add a lower tier or quote a price explicitly.`,
+                  `${lowest} ${unit}. Add a lower tier or quote a price explicitly.`,
             `items.${index}.quantity`,
           );
         }

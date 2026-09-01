@@ -29,10 +29,13 @@ const all: OutreachProvider[] = [
 ];
 
 describe('every provider honours the interface', () => {
-  it.each(all.map((p) => [p.name, p] as const))('%s declares a name and channel', (_n, provider) => {
-    expect(provider.name).toBeTruthy();
-    expect(['email', 'whatsapp']).toContain(provider.channel);
-  });
+  it.each(all.map((p) => [p.name, p] as const))(
+    '%s declares a name and channel',
+    (_n, provider) => {
+      expect(provider.name).toBeTruthy();
+      expect(['email', 'whatsapp']).toContain(provider.channel);
+    },
+  );
 
   it.each(all.map((p) => [p.name, p] as const))(
     '%s explains itself when unconfigured',
