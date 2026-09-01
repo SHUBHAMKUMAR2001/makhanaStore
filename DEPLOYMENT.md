@@ -160,6 +160,33 @@ sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
 sudo netfilter-persistent save
 ```
 
+### Before you click Create — check the review page
+
+The review screen is the last point where a mistake is cheap. Read these off it:
+
+| Field | Must say |
+| --- | --- |
+| Image | `Canonical Ubuntu 22.04 Minimal aarch64` |
+| Shape build | `4 core OCPU, 24 GB memory` |
+| **Public IPv4 address** | **Yes** ← the one that cannot be fixed afterwards |
+| Use network security groups | No |
+| Secure Boot / Measured Boot / TPM | Disabled |
+| Confidential computing | Disabled |
+| Boot volume | `100`, VPU `10` |
+| SSH keys | Your key is listed |
+
+**`Public IPv4 address: No` is the failure worth catching here.** An instance
+created without one has a private address only: no SSH, no site, and no
+certificate validation. There is no console setting that adds one later in any
+straightforward way — you delete the instance and start again. If the option is
+unavailable when you go back to edit, the wizard created a *private* subnet;
+recreate the VCN and choose a public one.
+
+And confirm you actually have the **private** key. The review page shows the
+public half, which proves nothing. If Oracle generated the pair in the browser,
+the private key was downloaded once at that moment and cannot be retrieved
+again.
+
 ## 3. Point your domain at it
 
 Create an **A record** for `leads.yourdomain.com` → the VM's public IP. Check it
