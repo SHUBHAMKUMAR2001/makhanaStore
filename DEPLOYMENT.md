@@ -92,8 +92,24 @@ exposed port, a weak admin password, and a leaked secret — all covered below.
 | --- | --- |
 | Boot volume size | **100 GB** (the 50 GB default is workable but tight) |
 | In-transit encryption | **On** (default) |
-| Boot volume performance | **Balanced** (default, VPU 10) |
+| Boot volume performance | **Balanced — VPU 10** (the default; do not raise it) |
 | Boot volume backup policy | None — `deploy/backup.sh` is the real backup |
+
+**On VPU:** leave it at the default **10 (Balanced)**. VPU is charged per GB per
+month, so raising it on a 100 GB volume is a recurring cost for throughput this
+workload never uses. Watch the cost estimate the console shows as you drag the
+slider — if it stops reading zero, you have left the free tier.
+
+At VPU 10 a 100 GB volume gets roughly 6,000 IOPS and ~48 MB/s. Nothing here
+comes close: Postgres holds a few hundred megabytes that the 24 GB of RAM caches
+almost entirely, document generation writes kilobytes, and the scraper is
+network-bound by design — it deliberately waits 3.5-9 seconds between requests.
+The only disk-hungry moment is the very first `docker compose build`, and that
+is a one-off you wait out once.
+
+Dropping to VPU 0 (Lower Cost) would also work but gives about 200 IOPS on this
+size, which mainly makes that first build slower. Balanced is the default for a
+reason; take it.
 
 Always Free includes **200 GB of block storage in total**, so 100 GB leaves room
 for a second free VM later. Rough steady-state usage:
