@@ -177,10 +177,20 @@ The review screen is the last point where a mistake is cheap. Read these off it:
 
 **`Public IPv4 address: No` is the failure worth catching here.** An instance
 created without one has a private address only: no SSH, no site, and no
-certificate validation. There is no console setting that adds one later in any
-straightforward way — you delete the instance and start again. If the option is
-unavailable when you go back to edit, the wizard created a *private* subnet;
-recreate the VCN and choose a public one.
+certificate validation.
+
+Do not confuse it with the field directly below it. They are independent:
+
+| Field | What it means |
+| --- | --- |
+| **Public IPv4 address** | A routable internet address. Off by default in some wizard paths. **This is the one you need.** |
+| Private IPv4 address | `10.0.0.x` inside your VCN — "the next unused address in the chosen subnet". Auto is correct and has nothing to do with reachability from outside. |
+
+If you do create the instance without a public IP, it is recoverable **provided
+the subnet is public**: Instance → Attached VNICs → the VNIC → IPv4 Addresses →
+Edit → assign an ephemeral or reserved public IP. Only a *private* subnet makes
+it unrecoverable, and then the fix is a new subnet or VCN rather than a new
+instance.
 
 And confirm you actually have the **private** key. The review page shows the
 public half, which proves nothing. If Oracle generated the pair in the browser,
