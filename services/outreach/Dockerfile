@@ -22,7 +22,8 @@ FROM base AS runner
 ENV NODE_ENV=production
 COPY --from=builder /app /app
 
-RUN groupadd -r outreach && useradd -r -g outreach outreach && chown -R outreach:outreach /app
+RUN groupadd -r outreach && useradd -r -m -g outreach outreach && chown -R outreach:outreach /app
+ENV HOME=/home/outreach
 USER outreach
 
 EXPOSE 4200

@@ -61,13 +61,28 @@ fi
 # --- generated documents ----------------------------------------------------
 # Quotations can be regenerated from Document.meta, but the issued file is what
 # the customer actually received, so keep the bytes.
-STORAGE_VOLUME="$(docker compose config --volumes | grep -x storage || true)"
-if [[ -n "$STORAGE_VOLUME" ]]; then
-  docker run --rm \
-    -v "$(basename "$REPO_DIR")_storage:/data:ro" \
-    -v "$BACKUP_DIR:/backup" \
-    alpine tar czf "/backup/$(basename "$DOCS_FILE")" -C /data . 2>/dev/null \
-    || echo "WARNING: document backup failed (database dump is still good)" >&2
+#
+# Ask Compose for the real volume name rather than deriving it from the
+# directory. Compose prefixes volumes with the project name from the `name:`
+# field in docker-compose.yml, which is NOT the directory name — guessing gives
+# "makhanaStore_storage" when the volume is "makhana-lead-engine_storage", and
+# the backup then fails silently every night.
+PROJECT_NAME="$(docker compose config --format json 2>/dev/null \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin).get("name",""))' 2>/dev/null || true)"
+: "${PROJECT_NAME:=$(basename "$REPO_DIR")}"
+STORAGE_VOLUME="${PROJECT_NAME}_storage"
+
+if docker volume inspect "$STORAGE_VOLUME" >/dev/null 2>&1; then
+  if docker run --rm \
+      -v "$STORAGE_VOLUME:/data:ro" \
+      -v "$BACKUP_DIR:/backup" \
+      alpine tar czf "/backup/$(basename "$DOCS_FILE")" -C /data . ; then
+    echo "archived documents from volume $STORAGE_VOLUME"
+  else
+    echo "WARNING: document backup failed (the database dump is still good)" >&2
+  fi
+else
+  echo "WARNING: storage volume '$STORAGE_VOLUME' not found — skipping documents" >&2
 fi
 
 # --- retention --------------------------------------------------------------

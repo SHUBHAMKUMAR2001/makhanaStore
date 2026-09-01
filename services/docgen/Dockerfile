@@ -23,8 +23,9 @@ ENV NODE_ENV=production
 COPY --from=builder /app /app
 
 # The storage volume is mounted here; the service must be able to write to it.
-RUN groupadd -r docgen && useradd -r -g docgen docgen \
+RUN groupadd -r docgen && useradd -r -m -g docgen docgen \
     && mkdir -p /data/storage && chown -R docgen:docgen /data/storage /app
+ENV HOME=/home/docgen
 USER docgen
 
 EXPOSE 4100

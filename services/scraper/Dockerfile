@@ -29,8 +29,9 @@ ENV NODE_ENV=production
 COPY --from=builder /app /app
 
 # Chromium must not run as root.
-RUN groupadd -r scraper && useradd -r -g scraper -G audio,video scraper \
+RUN groupadd -r scraper && useradd -r -m -g scraper -G audio,video scraper \
     && mkdir -p /home/scraper/Downloads && chown -R scraper:scraper /home/scraper /app
+ENV HOME=/home/scraper
 USER scraper
 
 CMD ["node", "services/scraper/dist/worker.js"]

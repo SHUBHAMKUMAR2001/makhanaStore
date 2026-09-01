@@ -106,6 +106,13 @@ openssl rand -hex 32      # run twice, once for each secret below
 
 ## 6. Start it
 
+> **This is the step I could not test.** The sandbox this was built in cannot
+> pull Docker images, so the six Dockerfiles have been statically verified —
+> every COPY path resolves, every build target exists, the context excludes
+> node_modules so no host-architecture binaries leak into an ARM image — but
+> never actually built. Expect this step to need a round of debugging; the
+> errors will be concrete and fixable.
+
 ```bash
 docker compose up -d
 docker compose logs -f caddy      # watch the certificate being issued

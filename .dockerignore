@@ -1,0 +1,33 @@
+# Keep the build context small and correct.
+#
+# node_modules matters most: copying a host-built tree into the image bakes in
+# native binaries for the WRONG ARCHITECTURE. Building on an x86 laptop for an
+# ARM VM would produce an image whose Prisma engine and Chromium cannot run.
+# Every Dockerfile installs dependencies inside the image instead.
+**/node_modules
+**/dist
+**/build
+**/.turbo
+**/coverage
+**/*.tsbuildinfo
+
+# Generated Prisma client — regenerated inside the image for the target arch.
+packages/db/generated
+
+# Secrets must never enter a build context.
+.env
+.env.*
+!.env.example
+
+# Local state that has no business in an image.
+storage/
+services/scraper/debug/
+e2e/test-results
+e2e/playwright-report
+test-results
+playwright-report
+
+.git
+.github
+**/.DS_Store
+**/*.log
