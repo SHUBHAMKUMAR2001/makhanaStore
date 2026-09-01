@@ -19,6 +19,66 @@ You need three things this repository cannot provide:
 
 ---
 
+## Option zero: run it on your own machine
+
+Before any of the cloud steps — this is a legitimate way to run this system, not
+a consolation prize.
+
+It is one business's internal tool with one user. A laptop or desktop in India
+satisfies every requirement the VM does, including the one that constrains
+everything else: **your home connection is an Indian IP, so the scraper works.**
+
+```bash
+git clone https://github.com/SHUBHAMKUMAR2001/makhanaStore.git
+cd makhanaStore && git checkout claude/makhana-lead-engine-9my01u
+cp .env.example .env
+```
+
+Edit `.env` — for local use the only required changes are:
+
+```bash
+POSTGRES_PASSWORD=<anything>
+SESSION_SECRET=<openssl rand -hex 32>
+INTERNAL_API_TOKEN=<openssl rand -hex 32>
+ADMIN_EMAIL=<your email>
+ADMIN_PASSWORD=<12+ characters>
+# Leave PUBLIC_URL as http://localhost:5173 and CADDY_SITE_ADDRESS as :80
+```
+
+Then:
+
+```bash
+docker compose up -d
+docker compose run --rm migrate pnpm --filter @lead/db seed
+```
+
+Open <http://localhost>. Everything works: leads, scoring, quotations, the
+scraper, the dashboard.
+
+**What you give up:** the machine has to be on to use it, and it is not
+reachable from elsewhere. For a single operator working from one desk, that is
+often the whole list.
+
+**What you gain right now:** this is also the first real test of the container
+build, which has never been executed anywhere. Doing it locally means debugging
+it with fast feedback on a machine you control, rather than over SSH on a VM you
+spent an afternoon acquiring. Whatever breaks here would have broken there.
+
+### Later, when you do want it online
+
+Nothing changes but three variables. Point `PUBLIC_URL` and
+`CADDY_SITE_ADDRESS` at your domain, copy `.env` and the repo to the server, and
+run the same two commands. The database moves with a `deploy/backup.sh` dump and
+a `deploy/restore.sh` restore.
+
+### Splitting it, if a small cloud box is easier to get than a big one
+
+Only the **scraper** needs an Indian IP. The API, web, docgen, outreach and
+Postgres do not care where they run. So a viable arrangement is the CRM on any
+cheap host anywhere, with the scraper left running at home in India pointed at
+it through `API_URL`. That drops the server's memory requirement to roughly
+1.5 GB, since Chromium is the heavy part.
+
 ## 1. Create the Oracle tenancy — **region matters permanently**
 
 At signup, choose a home region of **India South (Hyderabad)** or
