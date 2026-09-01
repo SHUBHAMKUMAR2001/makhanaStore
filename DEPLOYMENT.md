@@ -86,6 +86,31 @@ Build the network first, then come back:
 4. Create. You get a VCN, a **public** and a private subnet, an internet
    gateway, a NAT gateway and the matching route tables — all wired.
 
+> **Start VCN Wizard, not Create VCN.** They sit side by side on that page and
+> only one of them builds a usable network. *Create VCN* produces an empty VCN —
+> no subnet, no gateway, no route rule — and the symptom appears later: back on
+> the instance form, "Select existing subnet" offers an empty dropdown. The
+> giveaway while you are in it is a repeating **IPv4 CIDR Blocks** field saying
+> you may assign up to 16; the wizard instead shows three prefilled boxes for
+> the VCN and the two subnets.
+
+#### If you already made an empty VCN
+
+Either delete it and re-run the wizard, or wire it by hand — three pieces, in
+this order:
+
+1. **Subnet** — VCN → Subnets → *Create Subnet*. Name it, CIDR `10.0.0.0/24`,
+   and set **Subnet Access → Public Subnet**. This is the setting the whole
+   public-IP problem hinges on.
+2. **Internet gateway** — VCN → Internet Gateways → *Create Internet Gateway*.
+   A public subnet with no gateway still has no route off the VCN.
+3. **Route rule** — VCN → Route Tables → the default table → *Add Route Rules*:
+   destination `0.0.0.0/0`, target type **Internet Gateway**, target the gateway
+   from step 2. Without this rule the gateway exists but nothing points at it.
+
+Deleting and re-running the wizard is fewer steps and harder to get subtly
+wrong; an empty VCN deletes cleanly because nothing depends on it.
+
 Then in Create Instance → Networking:
 
 | Field | Set to | Why |
