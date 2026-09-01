@@ -93,7 +93,9 @@ dependency.
 ## Testing
 
 ```bash
-pnpm test          # every package
+pnpm test          # unit tests, every package
+pnpm test:e2e      # Playwright API smoke tests (boots the API itself)
+pnpm test:all      # both
 pnpm lint
 pnpm typecheck
 ```
@@ -116,7 +118,8 @@ DATABASE_URL=postgresql://lead:...@localhost:5432/lead_engine_test pnpm db:migra
 | `@lead/scraper` | 55 | Throttle pacing and caps, IndiaMART parsing, geo detection |
 | `@lead/docgen` | 41 | Money arithmetic, Indian numbering, storage path safety |
 | `@lead/outreach` | 17 | Provider contract, WhatsApp stub behaviour |
-| **Total** | **315** | |
+| `@lead/e2e` | 15 | Critical flows over real HTTP: creation, transitions, scoring |
+| **Total** | **330** | |
 
 ## Commands
 

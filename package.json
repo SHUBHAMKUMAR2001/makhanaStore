@@ -14,13 +14,15 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "pnpm -r test",
+    "test": "pnpm -r --filter '!@lead/e2e' test",
     "db:generate": "pnpm --filter @lead/db generate",
     "db:migrate": "pnpm --filter @lead/db migrate",
     "db:push": "pnpm --filter @lead/db push",
     "db:studio": "pnpm --filter @lead/db studio",
     "db:seed": "pnpm --filter @lead/db seed",
-    "dev": "docker compose up"
+    "dev": "docker compose up",
+    "test:e2e": "pnpm --filter @lead/e2e test",
+    "test:all": "pnpm test && pnpm test:e2e"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

@@ -106,8 +106,10 @@ jobs:
       - name: Build shared packages
         run: pnpm --filter @lead/shared build && pnpm --filter @lead/db build
 
+      # Excludes @lead/e2e: it has its own job with the credentials and running
+      # API it needs. A bare `pnpm -r test` picks it up here and fails.
       - name: Run tests
-        run: pnpm -r test
+        run: pnpm -r --filter '!@lead/e2e' test
 
   e2e:
     name: E2E smoke tests
