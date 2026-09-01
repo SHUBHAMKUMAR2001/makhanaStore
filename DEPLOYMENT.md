@@ -31,26 +31,14 @@ everything else: **your home connection is an Indian IP, so the scraper works.**
 ```bash
 git clone https://github.com/SHUBHAMKUMAR2001/makhanaStore.git
 cd makhanaStore && git checkout claude/makhana-lead-engine-9my01u
-cp .env.example .env
+./deploy/local-setup.sh
 ```
 
-Edit `.env` — for local use the only required changes are:
-
-```bash
-POSTGRES_PASSWORD=<anything>
-SESSION_SECRET=<openssl rand -hex 32>
-INTERNAL_API_TOKEN=<openssl rand -hex 32>
-ADMIN_EMAIL=<your email>
-ADMIN_PASSWORD=<12+ characters>
-# Leave PUBLIC_URL as http://localhost:5173 and CADDY_SITE_ADDRESS as :80
-```
-
-Then:
-
-```bash
-docker compose up -d
-docker compose run --rm migrate pnpm --filter @lead/db seed
-```
+That script does the rest: checks Docker is installed and running, asks for a
+login email and password, generates `.env` with real random secrets, builds the
+images, starts everything, waits for the API to report healthy, and seeds the
+admin account and catalogue. It is safe to re-run — an existing `.env` is never
+overwritten, so your password and session secret survive.
 
 Open <http://localhost>. Everything works: leads, scoring, quotations, the
 scraper, the dashboard.

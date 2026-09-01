@@ -36,6 +36,16 @@ changed after signup.
 ## Quick start
 
 ```bash
+./deploy/local-setup.sh
+```
+
+Checks prerequisites, generates `.env` with real secrets, builds and starts
+everything, and seeds the admin account. Then open <http://localhost>.
+
+<details>
+<summary>Or configure it by hand</summary>
+
+```bash
 cp .env.example .env
 # Edit .env — at minimum set POSTGRES_PASSWORD, SESSION_SECRET,
 # INTERNAL_API_TOKEN, ADMIN_EMAIL and ADMIN_PASSWORD.
@@ -47,10 +57,10 @@ docker compose up
 Then seed the admin account and business configuration:
 
 ```bash
-pnpm db:seed
+docker compose run --rm migrate pnpm --filter @lead/db seed
 ```
 
-The web app is on <http://localhost:5173>, the API on <http://localhost:4000>.
+</details>
 
 ### Running without Docker
 
