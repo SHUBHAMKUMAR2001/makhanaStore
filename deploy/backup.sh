@@ -67,10 +67,22 @@ fi
 # field in docker-compose.yml, which is NOT the directory name — guessing gives
 # "makhanaStore_storage" when the volume is "makhana-lead-engine_storage", and
 # the backup then fails silently every night.
-PROJECT_NAME="$(docker compose config --format json 2>/dev/null \
-  | python3 -c 'import json,sys; print(json.load(sys.stdin).get("name",""))' 2>/dev/null || true)"
+# Read the project name straight out of our own compose file with awk, rather
+# than parsing `docker compose config --format json`. That kept the script
+# working on a minimal image with no python3 or jq installed, and the value is a
+# plain literal in a file we control.
+PROJECT_NAME="$(awk '/^name:[[:space:]]/ { print $2; exit }' docker-compose.yml)"
 : "${PROJECT_NAME:=$(basename "$REPO_DIR")}"
 STORAGE_VOLUME="${PROJECT_NAME}_storage"
+
+# Fall back to asking Docker, which labels every volume Compose creates. This
+# covers a renamed project or a COMPOSE_PROJECT_NAME override.
+if ! docker volume inspect "$STORAGE_VOLUME" >/dev/null 2>&1; then
+  DISCOVERED="$(docker volume ls \
+    --filter 'label=com.docker.compose.volume=storage' \
+    --format '{{.Name}}' 2>/dev/null | head -1)"
+  [[ -n "$DISCOVERED" ]] && STORAGE_VOLUME="$DISCOVERED"
+fi
 
 if docker volume inspect "$STORAGE_VOLUME" >/dev/null 2>&1; then
   if docker run --rm \

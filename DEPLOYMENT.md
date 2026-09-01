@@ -41,6 +41,12 @@ Click the **Ampere** button in the *Shape series* row, then pick
 Free and costs nothing.
 
 - Image **Ubuntu 22.04 (aarch64)** — must be the ARM build to match the shape.
+  The **Minimal** aarch64 variant is a good choice and is what these
+  instructions assume: it is a smaller image with less preinstalled surface, and
+  everything this deployment needs gets installed explicitly in step 4. The
+  backup and restore scripts deliberately use only coreutils and Docker, so they
+  work on it without pulling in python3 or jq. The standard (non-minimal) image
+  is equally fine if you prefer having the usual diagnostic tools to hand.
 - Save the SSH private key it offers. There is no second chance.
 
 > **Do not take `VM.Standard.E2.1.Micro`**, even though it is also labelled
@@ -100,6 +106,17 @@ sudo apt update && sudo apt install -y docker.io docker-compose-v2 git
 sudo usermod -aG docker $USER
 exit                                # log out and back in for the group to apply
 ```
+
+On the Minimal image, add the two things the rest of this runbook uses that it
+does not ship with:
+
+```bash
+sudo apt install -y iptables-persistent cron
+```
+
+`iptables-persistent` provides `netfilter-persistent` for the firewall step, and
+`cron` runs the nightly backup. Everything else — `awk`, `find`, `gzip`, `tar`,
+`openssl` — is already present.
 
 ## 5. Clone and configure
 
