@@ -5,6 +5,7 @@ import {
   idParamSchema,
   scraperRunListQuerySchema,
   scraperRunRequestSchema,
+  scraperRunUpdateSchema,
   SCRAPER_RUN_STATUSES,
   type ScraperRunStatus,
 } from '@lead/shared';
@@ -154,6 +155,24 @@ export function registerCampaignRoutes(app: FastifyInstance): void {
       });
       throw error;
     }
+  });
+
+  /**
+   * Progress update from the scraper worker.
+   *
+   * Restricted to internal service calls: this is the audit trail, and a
+   * browser session has no business rewriting how a run turned out.
+   */
+  app.patch('/scraper-runs/:id', async (request) => {
+    if (request.actor?.kind !== 'internal') {
+      throw ApiError.forbidden('Scraper runs are updated by the scraper service, not by users');
+    }
+
+    const { id } = parseParams(idParamSchema, request.params);
+    const input = parseBody(scraperRunUpdateSchema, request.body);
+
+    const run = await prisma.scraperRun.update({ where: { id }, data: input });
+    return serializeScraperRun(run);
   });
 
   /** Operational visibility into whether the automatic schedule is on. */

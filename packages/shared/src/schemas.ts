@@ -205,6 +205,37 @@ export const scraperRunRequestSchema = z.object({
 });
 export type ScraperRunRequest = z.infer<typeof scraperRunRequestSchema>;
 
+/**
+ * Progress/outcome update posted by the scraper worker as a run proceeds.
+ *
+ * Internal-only: this is how the audit row learns that a run was geo-blocked
+ * rather than merely empty, so it accepts the operational statuses the worker
+ * can reach rather than the full enum.
+ */
+export const scraperRunUpdateSchema = z
+  .object({
+    status: z.enum([
+      'queued',
+      'running',
+      'completed',
+      'failed',
+      'capped',
+      'geo_blocked',
+      'cancelled',
+    ]),
+    startedAt: z.coerce.date(),
+    finishedAt: z.coerce.date(),
+    leadsFound: z.coerce.number().int().nonnegative(),
+    leadsCreated: z.coerce.number().int().nonnegative(),
+    leadsDuplicate: z.coerce.number().int().nonnegative(),
+    requestsMade: z.coerce.number().int().nonnegative(),
+    error: trimmed(1_000).nullish(),
+    errorDetail: trimmed(4_000).nullish(),
+  })
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, 'No fields to update');
+export type ScraperRunUpdate = z.infer<typeof scraperRunUpdateSchema>;
+
 export const scraperRunListQuerySchema = z.object({
   source: z.enum(LEAD_SOURCES).optional(),
   status: trimmed(40).optional(),
