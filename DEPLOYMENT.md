@@ -69,6 +69,49 @@ exposed port, a weak admin password, and a leaked secret — all covered below.
 > useful. Oracle's two free Micro instances do not help either — the workload
 > does not split across them.
 
+### Networking
+
+| Field | Set to | Why |
+| --- | --- | --- |
+| Primary network | **Create new VCN** (or an existing one with an internet gateway) | The wizard-created VCN comes with an internet gateway and route table already wired. |
+| Subnet | **Public subnet** | A private subnet has no route to the internet — no inbound traffic, and Let's Encrypt could not validate your domain. |
+| **Assign a public IPv4 address** | **YES** | ⚠️ The single most important toggle on this page. Without it the VM has no reachable address: no SSH, no site, and no way to fix it afterwards short of attaching one manually. |
+| IPv6 | Off | Nothing here needs it. |
+| Network security groups | Leave unchecked | The subnet's security list is where the 80/443 rules go (step 3). Using both is a common way to end up with rules that silently contradict each other. |
+
+> **Consider reserving the public IP.** The auto-assigned address is
+> *ephemeral*: it survives reboots and stops, but is released if you ever
+> terminate and recreate the instance — which would silently break the DNS A
+> record your site depends on. Networking → Reserved public IPs → reserve one
+> and attach it. Free, and it means rebuilding the VM does not mean re-pointing
+> your domain.
+
+### Storage (boot volume)
+
+| Field | Set to |
+| --- | --- |
+| Boot volume size | **100 GB** (the 50 GB default is workable but tight) |
+| In-transit encryption | **On** (default) |
+| Boot volume performance | **Balanced** (default, VPU 10) |
+| Boot volume backup policy | None — `deploy/backup.sh` is the real backup |
+
+Always Free includes **200 GB of block storage in total**, so 100 GB leaves room
+for a second free VM later. Rough steady-state usage:
+
+| | |
+| --- | --- |
+| Ubuntu Minimal | ~2 GB |
+| Docker images — five `node:22-slim` builds, postgres, redis, nginx, caddy, and the scraper image carrying Chromium | ~6–8 GB |
+| Docker build cache (the reason 50 GB gets tight) | ~3–5 GB, prunable |
+| Postgres data — leads are small; 10,000 with indexes | well under 1 GB |
+| Generated documents — a quotation is ~10 KB, a deck ~150 KB | ~150 MB per 1,000 |
+| Backups, 30-day retention on the same box | grows slowly |
+
+The scraper image is the large one: Chromium plus its shared libraries is most
+of a couple of gigabytes on its own. If disk does get tight,
+`docker system prune -a` reclaims build layers safely — but never
+`--volumes`, which would take `postgres-data` and `caddy-data` with it.
+
 ### If Ampere capacity is unavailable
 
 "Out of host capacity" on A1 is common. In order of effort:
