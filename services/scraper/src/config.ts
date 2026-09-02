@@ -32,6 +32,17 @@ const envSchema = z.object({
   SCRAPER_BATCH_PAUSE_MS: z.coerce.number().int().min(0).default(90_000),
 
   SCRAPER_HEADLESS: booleanish,
+
+  /**
+   * Path to an existing Chromium, when you do not want Puppeteer's bundled
+   * download. Needed on hosts where the postinstall was skipped, on ARM images
+   * that ship their own build, and anywhere a system Chromium already exists.
+   *
+   * Falls back to PUPPETEER_EXECUTABLE_PATH, which is the variable most Docker
+   * images already set, so an existing setup keeps working without new config.
+   */
+  SCRAPER_CHROME_PATH: z.string().default(''),
+  PUPPETEER_EXECUTABLE_PATH: z.string().default(''),
   SCRAPER_NAV_TIMEOUT_MS: z.coerce.number().int().min(1000).default(45_000),
   SCRAPER_GEO_CHECK_ENABLED: booleanish,
 

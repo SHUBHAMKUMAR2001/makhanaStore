@@ -23,10 +23,23 @@ function registerPlugins(): void {
   pluginRegistered = true;
 }
 
+/** An explicitly configured Chromium, or '' to let Puppeteer find its own. */
+function resolveExecutablePath(): string {
+  return env.SCRAPER_CHROME_PATH || env.PUPPETEER_EXECUTABLE_PATH || '';
+}
+
 export async function launchBrowser(): Promise<Browser> {
   registerPlugins();
 
+  const executablePath = resolveExecutablePath();
+  if (executablePath) {
+    logger.info({ executablePath }, 'Using a configured Chromium binary');
+  }
+
   return puppeteerExtra.launch({
+    // Only set when configured: passing an empty string makes Puppeteer look
+    // for a browser at '' rather than falling back to its bundled one.
+    ...(executablePath ? { executablePath } : {}),
     headless: env.SCRAPER_HEADLESS,
     args: [
       '--no-sandbox',
