@@ -630,6 +630,17 @@ Check `dig +short leads.yourdomain.com` returns the VM IP, and that ports 80 and
 443 are open in *both* the OCI security list and iptables. Let's Encrypt rate
 limits failures — fix DNS before retrying.
 
+**Scrape fails with "Could not find Chrome (ver. …)".**
+The image was built without the browser. Puppeteer downloads Chromium into
+`$HOME/.cache/puppeteer`, which in the build stage is outside `/app` and so is
+not carried into the runtime image. The Dockerfile now sets
+`PUPPETEER_CACHE_DIR=/app/.cache/puppeteer` and asserts the browser is present
+at build time, so this fails the build rather than the first scrape. If you
+built before that fix: `docker compose build --no-cache scraper`.
+
+On a host that already has a Chromium you want to use instead, set
+`SCRAPER_CHROME_PATH` (or `PUPPETEER_EXECUTABLE_PATH`) to its binary.
+
 **The scraper finds nothing.**
 Run `check-geo` on the VM. Then look at **Campaigns → Scrape runs**: every run
 records its outcome, and `Geo-blocked` means the wrong region while

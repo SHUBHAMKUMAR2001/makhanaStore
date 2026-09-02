@@ -166,6 +166,19 @@ collides with "Sharma Traders". The scraper de-duplicates within a run to avoid
 spending requests, but the database's unique index is the authority — a 409 from
 the API counts as a duplicate, not a failure.
 
+## Chromium
+
+The Docker image downloads the Chromium build puppeteer was tested against into
+`/app/.cache/puppeteer`, set via `PUPPETEER_CACHE_DIR`. That location matters:
+the default is `$HOME/.cache/puppeteer`, which sits outside `/app` and is not
+carried across the final `COPY --from=builder /app /app` — producing an image
+that builds cleanly and then fails at the first scrape. The Dockerfile asserts
+the browser exists at build time so that failure cannot reach production.
+
+To use a Chromium already on the host instead, set `SCRAPER_CHROME_PATH` to its
+binary. `PUPPETEER_EXECUTABLE_PATH` is honoured as a fallback, since that is the
+variable most container images already define.
+
 ## Testing
 
 ```bash

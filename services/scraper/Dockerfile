@@ -4,6 +4,16 @@
 FROM node:22-slim AS base
 WORKDIR /app
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
+# Puppeteer downloads Chromium into $HOME/.cache/puppeteer by default, which in
+# the builder stage is /root/.cache — outside /app, and therefore not carried
+# over by `COPY --from=builder /app /app`. The image then builds cleanly and
+# fails at the first scrape with "Could not find Chrome".
+#
+# Pointing the cache inside /app means the browser is copied with everything
+# else, and the same variable tells the runtime where to look.
+ENV PUPPETEER_CACHE_DIR=/app/.cache/puppeteer
+
 RUN corepack enable
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -17,8 +27,11 @@ FROM base AS deps
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml* tsconfig.base.json ./
 COPY packages/shared/package.json packages/shared/
 COPY services/scraper/package.json services/scraper/
-# Let puppeteer download the Chromium build it was tested against.
-RUN pnpm install --frozen-lockfile=false --filter @lead/shared --filter @lead/scraper
+# Downloads the Chromium build puppeteer was tested against, into
+# PUPPETEER_CACHE_DIR above.
+RUN pnpm install --frozen-lockfile=false --filter @lead/shared --filter @lead/scraper \
+ && test -d "$PUPPETEER_CACHE_DIR" \
+    || (echo "Chromium was not downloaded to $PUPPETEER_CACHE_DIR" >&2 && exit 1)
 
 FROM deps AS builder
 COPY packages/shared packages/shared
@@ -28,6 +41,11 @@ RUN pnpm --filter @lead/shared build && pnpm --filter @lead/scraper build
 FROM base AS runner
 ENV NODE_ENV=production
 COPY --from=builder /app /app
+
+# Fail the build rather than the first scrape if the browser is missing.
+RUN test -d /app/.cache/puppeteer \
+ && echo "Chromium present: $(find /app/.cache/puppeteer -name 'chrome' -type f | head -1)" \
+ || (echo "Chromium missing from the runtime image" >&2 && exit 1)
 
 # Chromium must not run as root.
 RUN groupadd -r scraper && useradd -r -m -g scraper -G audio,video scraper \
