@@ -90,6 +90,10 @@ else
   ok "generated .env with fresh secrets (mode 600)"
 fi
 
+# Load the values the checks below need.
+# shellcheck disable=SC1091
+set -a; source .env; set +a
+
 # --- 3. build and start -----------------------------------------------------
 bold "Building images"
 warn "First run pulls base images and compiles Chromium support — 10-20 minutes."
@@ -119,8 +123,31 @@ ok "API healthy"
 
 # --- 5. seed ----------------------------------------------------------------
 bold "Seeding the admin account and catalogue"
-docker compose run --rm migrate pnpm --filter @lead/db seed \
+
+# Pass the credentials explicitly as well as through compose. The seed skips
+# creating the admin user when they are absent, and it skips *quietly* — which
+# is correct on a re-run, but meant an earlier version of this script printed
+# "Ready" over a stack nobody could log in to.
+SEED_EMAIL="$(grep -E '^ADMIN_EMAIL=' .env | cut -d= -f2- | tr -d '"')"
+SEED_PASSWORD="$(grep -E '^ADMIN_PASSWORD=' .env | cut -d= -f2- | tr -d '"')"
+
+docker compose run --rm \
+  -e ADMIN_EMAIL="$SEED_EMAIL" \
+  -e ADMIN_PASSWORD="$SEED_PASSWORD" \
+  migrate pnpm --filter @lead/db seed \
   || die "Seeding failed. The stack is running; see 'docker compose logs migrate'."
+
+# Verify rather than trust. A seed that skipped the user exits 0.
+USER_COUNT="$(docker compose exec -T postgres \
+  psql -U "${POSTGRES_USER:-lead}" -d "${POSTGRES_DB:-lead_engine}" \
+  -tAc 'SELECT count(*) FROM "User"' 2>/dev/null | tr -d '[:space:]')"
+
+if [[ "${USER_COUNT:-0}" -lt 1 ]]; then
+  die "The seed ran but created no login. Re-run with the credentials passed explicitly:
+  docker compose run --rm -e ADMIN_EMAIL='<email>' -e ADMIN_PASSWORD='<password>' \\
+    migrate pnpm --filter @lead/db seed"
+fi
+ok "login created (${USER_COUNT} user)"
 
 # --- 6. done ----------------------------------------------------------------
 ADMIN_EMAIL_SHOWN="$(grep -E '^ADMIN_EMAIL=' .env | cut -d= -f2-)"

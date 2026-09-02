@@ -1,6 +1,16 @@
 FROM node:22-slim AS base
 WORKDIR /app
+
+# Corepack otherwise prompts "Do you want to continue? [Y/n]" on first use,
+# which stalls any non-interactive build or `docker compose run`.
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
+
+# Prisma needs OpenSSL to pick its query engine. Without it it warns that it
+# "failed to detect the libssl/openssl version" and falls back to openssl-1.1.x,
+# which is not what this image ships.
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 FROM base AS deps
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml* tsconfig.base.json ./

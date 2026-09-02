@@ -68,6 +68,12 @@ services:
     command: ['pnpm', '--filter', '@lead/db', 'migrate']
     environment:
       <<: *node-env
+      # The seed runs through this same service, and skips creating the admin
+      # user when these are absent — quietly, since a missing login is a
+      # reasonable thing to skip on a re-run. Without them here you get a
+      # working stack you cannot log in to.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
     depends_on:
       postgres:
         condition: service_healthy

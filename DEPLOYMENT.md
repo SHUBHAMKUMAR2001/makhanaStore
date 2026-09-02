@@ -602,6 +602,24 @@ timeline marks them `[not delivered: ...]` so nothing looks sent when it wasn't.
 
 ## Troubleshooting
 
+**The stack starts but the login is rejected.**
+The seed skipped creating the admin user, which it does silently when
+`ADMIN_EMAIL` and `ADMIN_PASSWORD` are not visible inside the container. Confirm
+with `docker compose exec postgres psql -U lead -d lead_engine -c 'SELECT email
+FROM "User"'` — an empty result is this. Fix by seeding with the values passed
+explicitly:
+
+```bash
+docker compose run --rm \
+  -e ADMIN_EMAIL='you@example.com' -e ADMIN_PASSWORD='your-password' \
+  migrate pnpm --filter @lead/db seed
+```
+
+**`pnpm: command not found` on your own shell.**
+Expected — pnpm runs inside the containers, not on your machine. Anything the
+docs show as `pnpm ...` is run as
+`docker compose run --rm migrate pnpm ...` when you are using Docker.
+
 **Login succeeds, then everything is 401.**
 `PUBLIC_URL` is `https://` but you are browsing over plain HTTP, or vice versa.
 The browser is discarding a `Secure` cookie. Make `PUBLIC_URL` and

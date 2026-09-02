@@ -2,6 +2,7 @@
 # Multi-stage so the runtime image carries no node_modules or toolchain.
 FROM node:22-slim AS builder
 WORKDIR /app
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
 
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml* tsconfig.base.json ./
