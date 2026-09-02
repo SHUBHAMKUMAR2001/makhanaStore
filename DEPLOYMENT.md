@@ -631,7 +631,17 @@ Check `dig +short leads.yourdomain.com` returns the VM IP, and that ports 80 and
 limits failures — fix DNS before retrying.
 
 **Scrape fails with "Could not find Chrome (ver. …)".**
-The image was built without the browser. Puppeteer downloads Chromium into
+Two separate causes, both fixed — if you cloned before them, `git pull` and
+`docker compose build --no-cache scraper`.
+
+The first is the one that matters: **pnpm 10 does not run dependency build
+scripts by default**, so puppeteer's postinstall — which downloads Chromium —
+never ran at all. It is not a warning you would notice; the install prints
+"Ignored build scripts" and exits 0. `pnpm.onlyBuiltDependencies` in the root
+package.json now allows it, along with prisma, esbuild and msgpackr-extract,
+which were being skipped for the same reason.
+
+The second is that the image was built without the browser. Puppeteer downloads Chromium into
 `$HOME/.cache/puppeteer`, which in the build stage is outside `/app` and so is
 not carried into the runtime image. The Dockerfile now sets
 `PUPPETEER_CACHE_DIR=/app/.cache/puppeteer` and asserts the browser is present

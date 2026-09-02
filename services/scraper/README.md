@@ -168,6 +168,13 @@ the API counts as a duplicate, not a failure.
 
 ## Chromium
 
+**pnpm 10 does not run dependency build scripts unless told to.** Puppeteer
+downloads Chromium from a postinstall script, so without
+`pnpm.onlyBuiltDependencies` in the root `package.json` it is silently skipped
+and every scrape fails with "Could not find Chrome". The install reports it as
+an easily-missed warning and exits successfully. Prisma, esbuild and
+msgpackr-extract are on that list for the same reason.
+
 The Docker image downloads the Chromium build puppeteer was tested against into
 `/app/.cache/puppeteer`, set via `PUPPETEER_CACHE_DIR`. That location matters:
 the default is `$HOME/.cache/puppeteer`, which sits outside `/app` and is not
